@@ -1,0 +1,49 @@
+plugins {
+    id 'java-library'
+    id 'groovy'
+    id 'checkstyle'
+    id 'com.github.johnrengelman.shadow' version '5.1.0'
+    id 'org.unbroken-dome.test-sets' version '2.2.1'
+}
+
+repositories {
+    jcenter()
+}
+
+sourceCompatibility = 1.12
+
+version = 0.1
+
+dependencies {
+    implementation 'ch.qos.logback:logback-classic:1.2.3'
+    implementation 'io.crossbar.autobahn:autobahn-java:18.5.1'
+    implementation 'io.projectreactor:reactor-core:3.3.0.RELEASE'
+
+    testImplementation 'org.codehaus.groovy:groovy-all:2.5.7'
+    testImplementation 'org.spockframework:spock-core:1.3-groovy-2.5'
+
+    checkstyle('com.github.sevntu-checkstyle:sevntu-checks:1.32.0')
+}
+
+jar {
+    manifest {
+        attributes 'Implementation-Title': 'Java client to MTM connector',
+                   'Implementation-Version': archiveVersion.getOrNull(),
+                   'Main-Class': project.group + '.Main'
+    }
+}
+
+shadowJar {
+    archiveBaseName.set('mtm-client')
+    archiveClassifier.set(null)
+}
+
+checkstyle {
+    toolVersion = '8.14'
+    configFile = new File("checkstyle.xml")
+    ignoreFailures = false
+}
+
+testSets {
+    integrationTest { dirName = 'test-integration' }
+}
