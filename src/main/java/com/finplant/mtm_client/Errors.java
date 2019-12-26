@@ -1,27 +1,22 @@
 package com.finplant.mtm_client;
 
-import io.crossbar.autobahn.wamp.exceptions.ApplicationError;
-
 public class Errors {
 
-    public static MtmError from(ApplicationError error) {
-        switch ((String) error.kwargs.get("uri")) {
-            case "unknown.error":
-                return new UnknownError((String) error.kwargs.get("message"));
-            default:
-                throw new IllegalStateException("Unexpected value: " + (String) error.kwargs.get("uri"));
-        }
-    }
-
-    public static class MtmError extends RuntimeException {
+    public static class MtmError extends Exception {
         public MtmError(String message) {
             super(message);
         }
     }
 
-    public static class UnknownError extends MtmError {
-        public UnknownError(String message) {
-            super(message);
+    public static class ConnectionUnexpectedCloseError extends Exception {
+        public ConnectionUnexpectedCloseError(int statusCode) {
+            super(String.format("Connection closed with a status %d", statusCode));
+        }
+    }
+
+    public static class ConnectionError extends Exception {
+        public ConnectionError(Throwable cause) {
+            super("Connection error", cause);
         }
     }
 }

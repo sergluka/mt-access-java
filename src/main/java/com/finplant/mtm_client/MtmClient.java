@@ -1,71 +1,72 @@
 package com.finplant.mtm_client;
 
+import java.net.URI;
 import java.time.Duration;
-import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.finplant.mtm_client.dto.internal.Registration;
+import com.finplant.mtm_client.requests.ProtocolExtensions;
+import com.finplant.mtm_client.requests.RequestsConfig;
 
-import io.crossbar.autobahn.wamp.Client;
-import io.crossbar.autobahn.wamp.Session;
-import io.crossbar.autobahn.wamp.exceptions.ApplicationError;
-import io.crossbar.autobahn.wamp.types.CloseDetails;
-import io.crossbar.autobahn.wamp.types.ExitInfo;
-import io.crossbar.autobahn.wamp.types.SessionDetails;
+import lombok.val;
+import reactor.core.Disposable;
+import reactor.core.Disposables;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.ReplayProcessor;
 import reactor.util.annotation.NonNull;
 
 public class MtmClient implements AutoCloseable {
 
-    private static final Logger log = LoggerFactory.getLogger(MtmClient.class);
+    private final ReplayProcessor<Boolean> connectSubject = ReplayProcessor.create();
+    private final Disposable.Composite disposables = Disposables.composite();
 
-    private Session session = new Session();
-    private ReplayProcessor<Boolean> connectSubject = ReplayProcessor.create();
+    private final RequestsConfig requestsConfig;
+    private final ProtocolExtensions protocolExtensions;
+
+    private final RpcClient client;
 
     public MtmClient() {
-        session.addOnJoinListener(this::onJoin);
-        session.addOnLeaveListener(this::onLeave);
+        client = new RpcClient(new WsClient());
+        requestsConfig = new RequestsConfig(client);
+        protocolExtensions = new ProtocolExtensions(client);
     }
 
     @Override
     public void close() {
-        session.leave();
+        disposables.dispose();
     }
 
-    public Mono<Void> connect(String realm, String url) {
-        return Mono.defer(() -> {
-            Client client = new Client(session, url, realm);
-            Mono.fromCompletionStage(client.connect()).subscribe(none -> {}, this::onConnectError);
-            return connectSubject.filter(status -> status).take(1).then();
-        }).onErrorMap(ApplicationError.class, Errors::from);
+    public Mono<Void> connect(URI uri) {
+        return client.connect(uri);
     }
 
-    private void onConnectError(Throwable throwable) {
-        connectSubject.onError(throwable);
+    public Flux<Boolean> connection() {
+        return client.connection();
     }
 
-    public Mono<Boolean> attach(String server, Integer login, String password) {
-        return attach(server, login, password, Duration.ZERO);
+    public Mono<Void> disconnect() {
+        return client.disconnect();
     }
 
-    public Mono<Boolean> attach(@NonNull String server, @NonNull Integer login, @NonNull String password,
-                                @NonNull Duration reconnectDelay) {
-        Map<String, Object> params = Map.of("server", server,
-                                            "login", login,
-                                            "password", password,
-                                            "reconnect_delay", reconnectDelay.toMillis());
-        return Mono.fromCompletionStage(session.call("connect", params))
-                   .map(result -> (Boolean) result.kwresults.get("is_connected"));
+    public Mono<Void> connectToMt(@NonNull String server, @NonNull Integer login, @NonNull String password,
+                                  @NonNull Duration reconnectDelay) {
+
+        val params = new Registration(server, login, password, reconnectDelay);
+        return client.request("connect", params);
     }
 
-    private void onJoin(Session session, SessionDetails details) {
-        log.info("Is connected to realm '{}' with id #{}", details.realm, details.sessionID);
-        connectSubject.onNext(true);
+    public Mono<Void> disconnectFromMt() {
+        return client.request("disconnect");
     }
 
-    private void onLeave(Session session, CloseDetails details) {
-        log.info("Is disconnected");
-        connectSubject.onNext(false);
+    public Flux<Boolean> connectionStatus() {
+        return client.subscribe("connection", Boolean.class);
+    }
+
+    public RequestsConfig config() {
+        return requestsConfig;
+    }
+    public ProtocolExtensions protocolExtensions() {
+        return protocolExtensions;
     }
 }
