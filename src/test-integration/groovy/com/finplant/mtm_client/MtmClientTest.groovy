@@ -2,6 +2,7 @@ package com.finplant.mtm_client
 
 import com.finplant.mtm_client.dto.ConCommon
 import com.finplant.mtm_client.dto.ConGroup
+import com.finplant.mtm_client.dto.UserRecord
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
@@ -11,6 +12,7 @@ import spock.lang.Specification
 import spock.lang.Subject
 
 import java.time.Duration
+import java.time.LocalDateTime
 import java.time.Month
 import java.time.ZoneOffset
 
@@ -161,6 +163,68 @@ class MtmClientTest extends Specification {
 
         then:
         assertThat(group2).isEqualToIgnoringNullFields(group1)
+    }
+
+    def "Validate user record"() {
+
+        given:
+        def user1 = UserRecord.builder()
+                .enable(true)
+                .group("miniforex")
+                .enableChangePassword(true)
+                .readOnly(false)
+                .enableOtp(false)
+                .passwordPhone("PhonePass")
+                .name("Johans Smits")
+                .country("Latvia")
+                .city("Riga")
+                .state("n/a")
+                .zipcode("LV-1063")
+                .address("Maskavas 322 - 501")
+                .leadSource("Source")
+                .phone("+37100112233")
+                .email("a@a.lv")
+                .comment("User comment")
+                .id("id1")
+                .status("STATUS")
+                .leverage(1000)
+                .agentAccount(1)
+                .taxes(30.33)
+                .sendReports(false)
+                .mqid(123456)
+                .userColor(0xFF00FF)
+                .apiData((0..15) as byte[])
+                .password("Pass1")
+                .passwordInvestor("Pass2")
+                .build()
+
+        when:
+        def newLogin = client.users().add(user1).timeout(Duration.ofSeconds(3)).block()
+
+        then:
+        newLogin > 0
+
+        and:
+        when:
+        user1.password = null
+        user1.passwordInvestor = null
+
+        def user2 = client.users().get(newLogin).timeout(Duration.ofSeconds(300)).block()
+
+        then:
+        assertThat(user2).isEqualToIgnoringNullFields(user1)
+
+        assertThat(user2.lastDate).isBeforeOrEqualTo(LocalDateTime.now())
+        assertThat(user2.registrationDate).isBeforeOrEqualTo(LocalDateTime.now())
+        assertThat(user2.timestamp).isBeforeOrEqualTo(LocalDateTime.now())
+        assertThat(user2.lastIp).isEqualTo("0.0.0.0")
+        assertThat(user2.prevMonthBalance).isEqualTo(0.0)
+        assertThat(user2.prevDayBalance).isEqualTo(0.0)
+        assertThat(user2.prevMonthEquity).isEqualTo(0.0)
+        assertThat(user2.prevDayEquity).isEqualTo(0.0)
+        assertThat(user2.interestrate).isEqualTo(0.0)
+        assertThat(user2.balance).isEqualTo(0.0)
+        assertThat(user2.credit).isEqualTo(0.0)
     }
 
     @Ignore("Works only with plugin with dummy `MtSrvManagerProtocol`")

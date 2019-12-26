@@ -1,6 +1,7 @@
 package com.finplant.mtm_client;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -8,6 +9,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.finplant.mtm_client.dto.common.Request;
 import com.finplant.mtm_client.dto.common.Subscription;
+import com.finplant.mtm_client.dto.jackson.BytesMapping;
 import com.finplant.mtm_client.dto.jackson.LocalDateTimeMapping;
 import com.finplant.mtm_client.dto.jackson.MonthMapping;
 import com.finplant.mtm_client.dto.jackson.ZoneOffsetMapping;
@@ -75,6 +77,10 @@ public class RpcClient implements AutoCloseable {
         return makeRequest(method, payload).map(response -> parse(response, resultClass));
     }
 
+    public <I, T> Mono<T> request(String method, I payload, TypeReference<T> typeReference) {
+        return makeRequest(method, payload).map(response -> parse(response, typeReference));
+    }
+
     public <T> Mono<T> request(String method, Class<T> resultClass) {
         return makeRequest(method, null).map(response -> parse(response, resultClass));
     }
@@ -120,6 +126,12 @@ public class RpcClient implements AutoCloseable {
     @SneakyThrows
     private <T> T parse(JsonNode json, Class<T> resultClass) {
         return mapper.treeToValue(json, resultClass);
+    }
+
+    @SneakyThrows
+    private <T> T parse(JsonNode json, TypeReference<T> typeReference) {
+        val javaType = mapper.getTypeFactory().constructType(typeReference);
+        return mapper.readValue(mapper.treeAsTokens(json), javaType);
     }
 
     @SneakyThrows
@@ -208,6 +220,8 @@ public class RpcClient implements AutoCloseable {
         simpleModule.addDeserializer(LocalDateTime.class, new LocalDateTimeMapping.Deserializer());
         simpleModule.addSerializer(ZoneOffset.class, new ZoneOffsetMapping.Serialize());
         simpleModule.addDeserializer(ZoneOffset.class, new ZoneOffsetMapping.Deserializer());
+        simpleModule.addSerializer(byte[].class, new BytesMapping.Serialize());
+        simpleModule.addDeserializer(byte[].class, new BytesMapping.Deserializer());
         mapper.registerModule(simpleModule);
     }
 

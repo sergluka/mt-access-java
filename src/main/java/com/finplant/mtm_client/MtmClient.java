@@ -1,12 +1,9 @@
 package com.finplant.mtm_client;
 
-import java.net.URI;
-import java.time.Duration;
-
 import com.finplant.mtm_client.dto.internal.Registration;
 import com.finplant.mtm_client.requests.ProtocolExtensions;
 import com.finplant.mtm_client.requests.RequestsConfig;
-
+import com.finplant.mtm_client.requests.Users;
 import lombok.val;
 import reactor.core.Disposable;
 import reactor.core.Disposables;
@@ -14,6 +11,9 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.ReplayProcessor;
 import reactor.util.annotation.NonNull;
+
+import java.net.URI;
+import java.time.Duration;
 
 public class MtmClient implements AutoCloseable {
 
@@ -24,11 +24,13 @@ public class MtmClient implements AutoCloseable {
     private final ProtocolExtensions protocolExtensions;
 
     private final RpcClient client;
+    private final Users users;
 
     public MtmClient() {
         client = new RpcClient(new WsClient());
         requestsConfig = new RequestsConfig(client);
         protocolExtensions = new ProtocolExtensions(client);
+        users = new Users(client);
     }
 
     @Override
@@ -66,6 +68,11 @@ public class MtmClient implements AutoCloseable {
     public RequestsConfig config() {
         return requestsConfig;
     }
+
+    public Users users() {
+        return users;
+    }
+
     public ProtocolExtensions protocolExtensions() {
         return protocolExtensions;
     }
