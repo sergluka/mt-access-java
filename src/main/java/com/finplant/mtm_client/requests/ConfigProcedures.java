@@ -5,8 +5,9 @@ import java.util.Map;
 import com.finplant.mtm_client.RpcClient;
 import com.finplant.mtm_client.dto.ConCommon;
 import com.finplant.mtm_client.dto.ConGroup;
-
 import com.finplant.mtm_client.dto.ConManager;
+
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class ConfigProcedures {
@@ -70,6 +71,10 @@ public class ConfigProcedures {
 
         public Mono<Void> delete(String group) {
             return client.request("config.group.del", Map.of("group", group));
+        }
+
+        public Flux<ConGroup> subscribe() {
+            return client.subscribe("group", ConGroup.class);
         }
     }
 

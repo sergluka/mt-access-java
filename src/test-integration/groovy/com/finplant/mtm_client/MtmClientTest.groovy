@@ -50,7 +50,7 @@ class MtmClientTest extends Specification {
         true
 
         expect:
-        Flux.merge(client.connectionStatus(), client.connectToMt(MT_URL, MT_LOGIN, MT_PASSWORD, Duration.ofSeconds(10)))
+        Flux.merge(client.remoteConnection(), client.connectToMt(MT_URL, MT_LOGIN, MT_PASSWORD, Duration.ofSeconds(10)))
                 .blockFirst()
     }
 
@@ -158,7 +158,7 @@ class MtmClientTest extends Specification {
 //        sleep(60000)
 
         client.disconnect().block(Duration.ofSeconds(10))
-        Flux.merge(client.connection().next(), client.connectToMt(MT_URL, 1, "manager", Duration.ofSeconds(10)))
+        Flux.merge(client.localConnection().next(), client.connectToMt(MT_URL, 1, "manager", Duration.ofSeconds(10)))
                 .blockFirst()
 
         def group2 = client.config().group().get("test").block(Duration.ofSeconds(10))
@@ -170,7 +170,7 @@ class MtmClientTest extends Specification {
     def "Validate user record"() {
 
         given:
-        client.users().del(100).onErrorResume { Mono.empty() }.block()
+        client.user().del(100).onErrorResume { Mono.empty() }.block()
 
         def user1 = UserRecord.builder()
                 .login(100)
@@ -204,7 +204,7 @@ class MtmClientTest extends Specification {
                 .build()
 
         when:
-        def newLogin = client.users().add(user1).timeout(Duration.ofSeconds(3)).block()
+        def newLogin = client.user().add(user1).timeout(Duration.ofSeconds(3)).block()
 
         then:
         newLogin == 100
@@ -214,7 +214,7 @@ class MtmClientTest extends Specification {
         user1.password = null
         user1.passwordInvestor = null
 
-        def user2 = client.users().get(newLogin).timeout(Duration.ofSeconds(30)).block()
+        def user2 = client.user().get(newLogin).timeout(Duration.ofSeconds(30)).block()
 
         then:
         assertThat(user2).isEqualToIgnoringNullFields(user1)
@@ -230,6 +230,47 @@ class MtmClientTest extends Specification {
         assertThat(user2.interestrate).isEqualTo(0.0)
         assertThat(user2.balance).isEqualTo(0.0)
         assertThat(user2.credit).isEqualTo(0.0)
+    }
+
+    def "Get event at user creation"() {
+        given:
+        def user1 = UserRecord.builder()
+                .login(101)
+                .enable(true)
+                .group("miniforex")
+                .enableChangePassword(true)
+                .readOnly(false)
+                .enableOtp(false)
+                .passwordPhone("PhonePass")
+                .name("Johans Smits")
+                .country("Latvia")
+                .city("Riga")
+                .state("n/a")
+                .zipcode("LV-1063")
+                .address("Maskavas 322 - 501")
+                .leadSource("Source")
+                .phone("+37100112233")
+                .email("a@a.lv")
+                .comment("User comment")
+                .id("id1")
+                .status("STATUS")
+                .leverage(1000)
+                .agentAccount(1)
+                .taxes(30.33)
+                .sendReports(false)
+                .mqid(123456)
+                .userColor(0xFF00FF)
+                .apiData((0..15) as byte[])
+                .password("Pass1")
+                .passwordInvestor("Pass2")
+                .build()
+
+        expect:
+        StepVerifier.create(client.user().subscribe())
+                .then { client.user().add(user1).timeout(Duration.ofSeconds(3)).block() }
+                .assertNext { it.login == 101 }
+                .thenCancel()
+                .verify(Duration.ofSeconds(10))
     }
 
     def "Validate managers"() {

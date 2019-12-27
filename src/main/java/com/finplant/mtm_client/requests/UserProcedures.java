@@ -18,8 +18,7 @@ public class UserProcedures {
     }
 
     public Mono<Integer> add(UserRecord user) {
-        return client.request("user.add", user, Map.class)
-                     .map(response -> (Integer) response.get("login"));
+        return client.request("user.add", user, Map.class).map(response -> (Integer) response.get("login"));
     }
 
     public Mono<Void> set(UserRecord user) {
@@ -41,5 +40,9 @@ public class UserProcedures {
 
     public Mono<Void> del(Integer login) {
         return del(List.of(login));
+    }
+
+    public Flux<UserRecord> subscribe() {
+        return client.subscribe("user", UserRecord.class);
     }
 }

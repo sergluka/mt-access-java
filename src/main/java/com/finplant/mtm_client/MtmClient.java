@@ -13,25 +13,22 @@ import reactor.core.Disposable;
 import reactor.core.Disposables;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.ReplayProcessor;
 import reactor.util.annotation.NonNull;
 
 public class MtmClient implements AutoCloseable {
 
-    private final ReplayProcessor<Boolean> connectSubject = ReplayProcessor.create();
     private final Disposable.Composite disposables = Disposables.composite();
 
-    private final ConfigProcedures requestsConfig;
-    private final ProtocolExtensionsProcedures protocolExtensions;
-
     private final RpcClient client;
-    private final UserProcedures users;
+    private final ConfigProcedures configProcedures;
+    private final ProtocolExtensionsProcedures protocolExtensionsProcedures;
+    private final UserProcedures userProcedures;
 
     public MtmClient() {
         client = new RpcClient(new WsClient());
-        requestsConfig = new ConfigProcedures(client);
-        protocolExtensions = new ProtocolExtensionsProcedures(client);
-        users = new UserProcedures(client);
+        configProcedures = new ConfigProcedures(client);
+        protocolExtensionsProcedures = new ProtocolExtensionsProcedures(client);
+        userProcedures = new UserProcedures(client);
     }
 
     @Override
@@ -43,8 +40,12 @@ public class MtmClient implements AutoCloseable {
         return client.connect(uri);
     }
 
-    public Flux<Boolean> connection() {
+    public Flux<Boolean> localConnection() {
         return client.connection();
+    }
+
+    public Flux<Boolean> remoteConnection() {
+        return client.subscribe("connection", Boolean.class);
     }
 
     public Mono<Void> disconnect() {
@@ -62,19 +63,15 @@ public class MtmClient implements AutoCloseable {
         return client.request("disconnect");
     }
 
-    public Flux<Boolean> connectionStatus() {
-        return client.subscribe("connection", Boolean.class);
-    }
-
     public ConfigProcedures config() {
-        return requestsConfig;
+        return configProcedures;
     }
 
-    public UserProcedures users() {
-        return users;
+    public UserProcedures user() {
+        return userProcedures;
     }
 
     public ProtocolExtensionsProcedures protocolExtensions() {
-        return protocolExtensions;
+        return protocolExtensionsProcedures;
     }
 }
