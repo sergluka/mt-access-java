@@ -170,7 +170,10 @@ class MtmClientTest extends Specification {
     def "Validate user record"() {
 
         given:
+        client.users().del(100).onErrorResume { Mono.empty() }.block()
+
         def user1 = UserRecord.builder()
+                .login(100)
                 .enable(true)
                 .group("miniforex")
                 .enableChangePassword(true)
@@ -204,7 +207,7 @@ class MtmClientTest extends Specification {
         def newLogin = client.users().add(user1).timeout(Duration.ofSeconds(3)).block()
 
         then:
-        newLogin > 0
+        newLogin == 100
 
         and:
         when:

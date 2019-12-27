@@ -23,7 +23,7 @@ public class WsClientImpl implements WebSocketListener {
 
     @Override
     public void onWebSocketText(String message) {
-        log.debug("=> {}", message);
+        log.trace("=> {}", message);
         messageProcessor.onNext(message);
     }
 

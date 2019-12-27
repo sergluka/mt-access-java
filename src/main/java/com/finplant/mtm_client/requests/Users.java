@@ -21,6 +21,10 @@ public class Users {
                      .map(response -> (Integer) response.get("login"));
     }
 
+    public Mono<Void> set(UserRecord user) {
+        return client.request("user.set", user);
+    }
+
     public Flux<UserRecord> get(List<Integer> logins) {
         return client.request("users.get", Map.of("logins", logins), new TypeReference<List<UserRecord>>() {})
                      .flatMapMany(Flux::fromIterable);
@@ -28,5 +32,13 @@ public class Users {
 
     public Mono<UserRecord> get(Integer login) {
         return get(List.of(login)).single();
+    }
+
+    public Mono<Void> del(List<Integer> logins) {
+        return client.request("users.del", Map.of("logins", logins));
+    }
+
+    public Mono<Void> del(Integer login) {
+        return del(List.of(login));
     }
 }
