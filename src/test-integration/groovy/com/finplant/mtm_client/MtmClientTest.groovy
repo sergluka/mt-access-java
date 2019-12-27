@@ -91,8 +91,8 @@ class MtmClientTest extends Specification {
                 .stopReason(ConCommon.StopReason.SHUTDOWN)
                 .build()
 
-        client.config().setCommon(config1).block(Duration.ofSeconds(10))
-        def config2 = client.config().getCommon().block(Duration.ofSeconds(10))
+        client.config().common().set(config1).block(Duration.ofSeconds(10))
+        def config2 = client.config().common().get().block(Duration.ofSeconds(10))
 
         then:
         assertThat(config2).isEqualToIgnoringNullFields(config1)
@@ -109,7 +109,7 @@ class MtmClientTest extends Specification {
     def "Validate group config"() {
 
         given:
-        client.config().deleteGroup("test").onErrorResume { Mono.empty() }.block()
+        client.config().group().delete("test").onErrorResume { Mono.empty() }.block()
 
         when:
         def group1 = ConGroup.builder()
@@ -153,7 +153,7 @@ class MtmClientTest extends Specification {
                 .newsLanguages(Set.of("ru-RU", "en-EN"))
                 .build()
 
-        client.config().addGroup(group1).block(Duration.ofSeconds(10))
+        client.config().group().add(group1).block(Duration.ofSeconds(10))
 
 //        sleep(60000)
 
@@ -161,7 +161,7 @@ class MtmClientTest extends Specification {
         Flux.merge(client.connection().next(), client.connectToMt(MT_URL, 1, "manager", Duration.ofSeconds(10)))
                 .blockFirst()
 
-        def group2 = client.config().getGroup("test").block(Duration.ofSeconds(10))
+        def group2 = client.config().group().get("test").block(Duration.ofSeconds(10))
 
         then:
         assertThat(group2).isEqualToIgnoringNullFields(group1)
@@ -235,7 +235,7 @@ class MtmClientTest extends Specification {
     def "Validate managers"() {
 
         given:
-        client.config().deleteManager(123).onErrorResume { Mono.empty() }.block()
+        client.config().manager().delete(123).onErrorResume { Mono.empty() }.block()
 
         def forexSecurity = ConManagerSecurity.builder()
                 .enable(true)
@@ -280,8 +280,8 @@ class MtmClientTest extends Specification {
                 .build()
 
         when:
-        client.config().addManager(manager1).timeout(Duration.ofSeconds(30)).block()
-        def manager2 = client.config().getManager(123).timeout(Duration.ofSeconds(30)).block()
+        client.config().manager().add(manager1).timeout(Duration.ofSeconds(30)).block()
+        def manager2 = client.config().manager().get(123).timeout(Duration.ofSeconds(30)).block()
 
         then:
         assertThat(manager2).isEqualToIgnoringGivenFields(manager1, "securities")

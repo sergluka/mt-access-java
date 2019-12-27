@@ -7,10 +7,10 @@ import reactor.core.publisher.Mono;
 import java.util.Base64;
 import java.util.Map;
 
-public class ProtocolExtensions {
+public class ProtocolExtensionsProcedures {
     private final RpcClient client;
 
-    public ProtocolExtensions(RpcClient client) {
+    public ProtocolExtensionsProcedures(RpcClient client) {
         this.client = client;
     }
 

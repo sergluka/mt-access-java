@@ -3,16 +3,17 @@ package com.finplant.mtm_client.requests;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.finplant.mtm_client.RpcClient;
 import com.finplant.mtm_client.dto.UserRecord;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Map;
 
-public class Users {
+public class UserProcedures {
     private final RpcClient client;
 
-    public Users(RpcClient client) {
+    public UserProcedures(RpcClient client) {
         this.client = client;
     }
 

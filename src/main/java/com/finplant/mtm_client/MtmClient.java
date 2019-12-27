@@ -1,9 +1,13 @@
 package com.finplant.mtm_client;
 
+import java.net.URI;
+import java.time.Duration;
+
 import com.finplant.mtm_client.dto.internal.Registration;
-import com.finplant.mtm_client.requests.ProtocolExtensions;
-import com.finplant.mtm_client.requests.RequestsConfig;
-import com.finplant.mtm_client.requests.Users;
+import com.finplant.mtm_client.requests.ConfigProcedures;
+import com.finplant.mtm_client.requests.ProtocolExtensionsProcedures;
+import com.finplant.mtm_client.requests.UserProcedures;
+
 import lombok.val;
 import reactor.core.Disposable;
 import reactor.core.Disposables;
@@ -12,25 +16,22 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.ReplayProcessor;
 import reactor.util.annotation.NonNull;
 
-import java.net.URI;
-import java.time.Duration;
-
 public class MtmClient implements AutoCloseable {
 
     private final ReplayProcessor<Boolean> connectSubject = ReplayProcessor.create();
     private final Disposable.Composite disposables = Disposables.composite();
 
-    private final RequestsConfig requestsConfig;
-    private final ProtocolExtensions protocolExtensions;
+    private final ConfigProcedures requestsConfig;
+    private final ProtocolExtensionsProcedures protocolExtensions;
 
     private final RpcClient client;
-    private final Users users;
+    private final UserProcedures users;
 
     public MtmClient() {
         client = new RpcClient(new WsClient());
-        requestsConfig = new RequestsConfig(client);
-        protocolExtensions = new ProtocolExtensions(client);
-        users = new Users(client);
+        requestsConfig = new ConfigProcedures(client);
+        protocolExtensions = new ProtocolExtensionsProcedures(client);
+        users = new UserProcedures(client);
     }
 
     @Override
@@ -65,15 +66,15 @@ public class MtmClient implements AutoCloseable {
         return client.subscribe("connection", Boolean.class);
     }
 
-    public RequestsConfig config() {
+    public ConfigProcedures config() {
         return requestsConfig;
     }
 
-    public Users users() {
+    public UserProcedures users() {
         return users;
     }
 
-    public ProtocolExtensions protocolExtensions() {
+    public ProtocolExtensionsProcedures protocolExtensions() {
         return protocolExtensions;
     }
 }
