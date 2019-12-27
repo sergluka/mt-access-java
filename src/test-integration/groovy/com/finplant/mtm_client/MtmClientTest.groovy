@@ -2,6 +2,8 @@ package com.finplant.mtm_client
 
 import com.finplant.mtm_client.dto.ConCommon
 import com.finplant.mtm_client.dto.ConGroup
+import com.finplant.mtm_client.dto.ConManager
+import com.finplant.mtm_client.dto.ConManagerSecurity
 import com.finplant.mtm_client.dto.UserRecord
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
@@ -209,7 +211,7 @@ class MtmClientTest extends Specification {
         user1.password = null
         user1.passwordInvestor = null
 
-        def user2 = client.users().get(newLogin).timeout(Duration.ofSeconds(300)).block()
+        def user2 = client.users().get(newLogin).timeout(Duration.ofSeconds(30)).block()
 
         then:
         assertThat(user2).isEqualToIgnoringNullFields(user1)
@@ -225,6 +227,63 @@ class MtmClientTest extends Specification {
         assertThat(user2.interestrate).isEqualTo(0.0)
         assertThat(user2.balance).isEqualTo(0.0)
         assertThat(user2.credit).isEqualTo(0.0)
+    }
+
+    def "Validate managers"() {
+
+        given:
+        client.config().deleteManager(123).onErrorResume { Mono.empty() }.block()
+
+        def forexSecurity = ConManagerSecurity.builder()
+                .enable(true)
+                .maximumLots(100)
+                .minimumLots(2)
+                .build()
+        def cfdSecurity = ConManagerSecurity.builder()
+                .enable(false)
+                .maximumLots(0)
+                .minimumLots(0)
+                .build()
+
+        def manager1 = ConManager.builder()
+                .login(123)
+                .name("Manager1")
+                .manager(true)
+                .money(true)
+                .online(true)
+                .riskman(true)
+                .broker(true)
+                .admin(true)
+                .logs(true)
+                .reports(true)
+                .trades(true)
+                .marketWatch(true)
+                .email(true)
+                .userDetails(true)
+                .seeTrades(true)
+                .news(true)
+                .plugins(true)
+                .serverReports(true)
+                .techSupport(true)
+                .market(true)
+                .notifications(true)
+                .ipFilter(true)
+                .ipFrom("128.0.0.0")
+                .ipTo("128.255.255.255")
+                .mailbox("MAILBOX")
+                .groups(List.of("manager", "mini*", "*"))
+                .infoDepth(10)
+                .securities(["Forex": forexSecurity])
+                .build()
+
+        when:
+        client.config().addManager(manager1).timeout(Duration.ofSeconds(30)).block()
+        def manager2 = client.config().getManager(123).timeout(Duration.ofSeconds(30)).block()
+
+        then:
+        assertThat(manager2).isEqualToIgnoringGivenFields(manager1, "securities")
+        assertThat(manager2.securities["Forex"]).isEqualToComparingFieldByField(forexSecurity)
+        assertThat(manager2.securities["CFD"]).isEqualToComparingFieldByField(cfdSecurity)
     }
 
     @Ignore("Works only with plugin with dummy `MtSrvManagerProtocol`")
@@ -247,4 +306,5 @@ class MtmClientTest extends Specification {
                 .assertNext { assertThat(it).containsExactly(0x10, 0x11, 0x12) }
                 .verifyComplete()
     }
+
 }
