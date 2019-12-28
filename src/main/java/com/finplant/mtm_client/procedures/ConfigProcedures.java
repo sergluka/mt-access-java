@@ -1,4 +1,4 @@
-package com.finplant.mtm_client.requests;
+package com.finplant.mtm_client.procedures;
 
 import java.util.Map;
 
@@ -42,11 +42,11 @@ public class ConfigProcedures {
         }
 
         public Mono<ConCommon> get() {
-            return client.request("config.common.get", ConCommon.class);
+            return client.call("config.common.get", ConCommon.class);
         }
 
         public Mono<Void> set(ConCommon common) {
-            return client.request("config.common.set", common);
+            return client.call("config.common.set", common);
         }
     }
 
@@ -58,19 +58,19 @@ public class ConfigProcedures {
         }
 
         public Mono<Void> add(ConGroup group) {
-            return client.request("config.group.add", group);
+            return client.call("config.group.add", group);
         }
 
         public Mono<ConGroup> get(String group) {
-            return client.request("config.group.get", Map.of("group", group), ConGroup.class);
+            return client.call("config.group.get", Map.of("group", group), ConGroup.class);
         }
 
         public Mono<Void> set(ConGroup group) {
-            return client.request("config.group.set", group);
+            return client.call("config.group.set", group);
         }
 
         public Mono<Void> delete(String group) {
-            return client.request("config.group.del", Map.of("group", group));
+            return client.call("config.group.del", Map.of("group", group));
         }
 
         public Flux<ConGroup> subscribe() {
@@ -86,15 +86,15 @@ public class ConfigProcedures {
         }
 
         public Mono<Void> add(ConManager manager) {
-            return client.request("config.manager.set", manager);
+            return client.call("config.manager.set", manager);
         }
 
         public Mono<ConManager> get(Integer login) {
-            return client.request("config.manager.get", Map.of("login", login), ConManager.class);
+            return client.call("config.manager.get", Map.of("login", login), ConManager.class);
         }
 
         public Mono<Void> delete(Integer login) {
-            return client.request("config.manager.del", Map.of("login", login));
+            return client.call("config.manager.del", Map.of("login", login));
         }
     }
 }

@@ -1,4 +1,4 @@
-package com.finplant.mtm_client.requests;
+package com.finplant.mtm_client.procedures;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.finplant.mtm_client.RpcClient;
@@ -18,15 +18,15 @@ public class UserProcedures {
     }
 
     public Mono<Integer> add(UserRecord user) {
-        return client.request("user.add", user, Map.class).map(response -> (Integer) response.get("login"));
+        return client.call("user.add", user, Map.class).map(response -> (Integer) response.get("login"));
     }
 
     public Mono<Void> set(UserRecord user) {
-        return client.request("user.set", user);
+        return client.call("user.set", user);
     }
 
     public Flux<UserRecord> get(List<Integer> logins) {
-        return client.request("users.get", Map.of("logins", logins), new TypeReference<List<UserRecord>>() {})
+        return client.call("users.get", Map.of("logins", logins), new TypeReference<List<UserRecord>>() {})
                      .flatMapMany(Flux::fromIterable);
     }
 
@@ -35,7 +35,7 @@ public class UserProcedures {
     }
 
     public Mono<Void> del(List<Integer> logins) {
-        return client.request("users.del", Map.of("logins", logins));
+        return client.call("users.del", Map.of("logins", logins));
     }
 
     public Mono<Void> del(Integer login) {

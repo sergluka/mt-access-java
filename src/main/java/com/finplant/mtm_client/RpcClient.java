@@ -1,5 +1,13 @@
 package com.finplant.mtm_client;
 
+import java.net.URI;
+import java.time.LocalDateTime;
+import java.time.Month;
+import java.time.ZoneOffset;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -13,6 +21,7 @@ import com.finplant.mtm_client.dto.jackson.BytesMapping;
 import com.finplant.mtm_client.dto.jackson.LocalDateTimeMapping;
 import com.finplant.mtm_client.dto.jackson.MonthMapping;
 import com.finplant.mtm_client.dto.jackson.ZoneOffsetMapping;
+
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -22,14 +31,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoSink;
-
-import java.net.URI;
-import java.time.LocalDateTime;
-import java.time.Month;
-import java.time.ZoneOffset;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
 public class RpcClient implements AutoCloseable {
@@ -73,23 +74,23 @@ public class RpcClient implements AutoCloseable {
         return client.disconnect();
     }
 
-    public <I, T> Mono<T> request(String method, I payload, Class<T> resultClass) {
+    public <I, T> Mono<T> call(String method, I payload, Class<T> resultClass) {
         return makeRequest(method, payload).map(response -> parse(response, resultClass));
     }
 
-    public <I, T> Mono<T> request(String method, I payload, TypeReference<T> typeReference) {
+    public <I, T> Mono<T> call(String method, I payload, TypeReference<T> typeReference) {
         return makeRequest(method, payload).map(response -> parse(response, typeReference));
     }
 
-    public <T> Mono<T> request(String method, Class<T> resultClass) {
+    public <T> Mono<T> call(String method, Class<T> resultClass) {
         return makeRequest(method, null).map(response -> parse(response, resultClass));
     }
 
-    public <T> Mono<Void> request(String method, T payload) {
+    public <T> Mono<Void> call(String method, T payload) {
         return makeRequest(method, payload).then();
     }
 
-    public Mono<Void> request(String method) {
+    public Mono<Void> call(String method) {
         return makeRequest(method, null).then();
     }
 
@@ -113,14 +114,13 @@ public class RpcClient implements AutoCloseable {
     }
 
     private <T> Flux<T> makeSubscription(String name, Class<T> eventClass) {
-        val unSubscribeRequest = makeRequest("unsubscribe", new Subscription(name));
-        val subscription = Flux.<JsonNode>create(sink -> {
-            events.put(name, sink);
-            sink.onCancel(unSubscribeRequest::subscribe);
-        });
+        val subscribeRequest = call("subscribe", new Subscription(name), eventClass);
+        val unSubscribeRequest = call("unsubscribe", new Subscription(name), eventClass);
 
-        return Flux.concat(makeRequest("subscribe", new Subscription(name)), subscription)
-                   .map(json -> parse(json, eventClass));
+        val storeSubscription = Flux.<JsonNode>create(sink -> events.put(name, sink))
+              .<T>map(json -> parse(json, eventClass));
+
+        return Flux.concat(subscribeRequest, storeSubscription, unSubscribeRequest);
     }
 
     @SneakyThrows

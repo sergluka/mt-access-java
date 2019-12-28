@@ -4,9 +4,11 @@ import java.net.URI;
 import java.time.Duration;
 
 import com.finplant.mtm_client.dto.internal.Registration;
-import com.finplant.mtm_client.requests.ConfigProcedures;
-import com.finplant.mtm_client.requests.ProtocolExtensionsProcedures;
-import com.finplant.mtm_client.requests.UserProcedures;
+import com.finplant.mtm_client.procedures.ConfigProcedures;
+import com.finplant.mtm_client.procedures.MarketProcedures;
+import com.finplant.mtm_client.procedures.ProtocolExtensionsProcedures;
+import com.finplant.mtm_client.procedures.SymbolProcedures;
+import com.finplant.mtm_client.procedures.UserProcedures;
 
 import lombok.val;
 import reactor.core.Disposable;
@@ -23,12 +25,16 @@ public class MtmClient implements AutoCloseable {
     private final ConfigProcedures configProcedures;
     private final ProtocolExtensionsProcedures protocolExtensionsProcedures;
     private final UserProcedures userProcedures;
+    private final SymbolProcedures symbolProcedures;
+    private final MarketProcedures marketProcedures;
 
     public MtmClient() {
         client = new RpcClient(new WsClient());
         configProcedures = new ConfigProcedures(client);
         protocolExtensionsProcedures = new ProtocolExtensionsProcedures(client);
         userProcedures = new UserProcedures(client);
+        symbolProcedures = new SymbolProcedures(client);
+        marketProcedures = new MarketProcedures(client);
     }
 
     @Override
@@ -56,11 +62,11 @@ public class MtmClient implements AutoCloseable {
                                   @NonNull Duration reconnectDelay) {
 
         val params = new Registration(server, login, password, reconnectDelay);
-        return client.request("connect", params);
+        return client.call("connect", params);
     }
 
     public Mono<Void> disconnectFromMt() {
-        return client.request("disconnect");
+        return client.call("disconnect");
     }
 
     public ConfigProcedures config() {
@@ -69,6 +75,14 @@ public class MtmClient implements AutoCloseable {
 
     public UserProcedures user() {
         return userProcedures;
+    }
+
+    public SymbolProcedures symbol() {
+        return symbolProcedures;
+    }
+
+    public MarketProcedures market() {
+        return marketProcedures;
     }
 
     public ProtocolExtensionsProcedures protocolExtensions() {

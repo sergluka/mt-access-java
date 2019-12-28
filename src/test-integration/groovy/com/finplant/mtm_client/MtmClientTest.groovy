@@ -330,6 +330,42 @@ class MtmClientTest extends Specification {
         assertThat(manager2.securities["CFD"]).isEqualToComparingFieldByField(cfdSecurity)
     }
 
+    def "Get last prices for EURUSD"() {
+
+        expect:
+        StepVerifier.create(client.market().ticksGet("EURUSD"))
+                .assertNext {
+                    assert it.time != null
+                    assert it.ask > 0.0
+                    assert it.bid > 0.0
+                }
+                .verifyComplete()
+    }
+
+    def "Subscribe to EURUSD tick"() {
+
+        given:
+        def tick = client.market().ticksGet("EURUSD").blockFirst()
+        def newBid = tick.bid + 0.0001
+        def newAsk = tick.ask + 0.0001
+
+        client.symbol().showSymbol("EURUSD").block()
+
+        expect:
+        StepVerifier.create(client.symbol().subscribe())
+                .then { client.symbol().addTick("EURUSD", newBid, newAsk).block() }
+                .assertNext {
+                    assert it.time != null
+                    assert it.bid == newBid
+                    assert it.ask == newAsk
+                }
+                .thenCancel()
+                .verify()
+
+        cleanup:
+        client.symbol().hideSymbol("EURUSD").block()
+    }
+
     @Ignore("Works only with plugin with dummy `MtSrvManagerProtocol`")
     def "Send external command as text"() {
 

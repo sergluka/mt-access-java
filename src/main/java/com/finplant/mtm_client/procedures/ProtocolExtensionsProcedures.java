@@ -1,4 +1,4 @@
-package com.finplant.mtm_client.requests;
+package com.finplant.mtm_client.procedures;
 
 import com.finplant.mtm_client.RpcClient;
 import lombok.val;
@@ -15,14 +15,14 @@ public class ProtocolExtensionsProcedures {
     }
 
     public Mono<String> externalCommand(String command) {
-        return client.request("external.command", Map.of("command", command, "encoding", "plain"), String.class);
+        return client.call("external.command", Map.of("command", command, "encoding", "plain"), String.class);
     }
 
     public Mono<byte[]> externalCommand(byte[] command) {
 
         val base64 = Base64.getEncoder().encodeToString(command);
 
-        return client.request("external.command", Map.of("command", base64, "encoding", "base64"), String.class)
+        return client.call("external.command", Map.of("command", base64, "encoding", "base64"), String.class)
                      .map(response -> Base64.getDecoder().decode(response));
     }
 }

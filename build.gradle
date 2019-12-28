@@ -21,7 +21,7 @@ dependencies {
 
     implementation 'ch.qos.logback:logback-classic:1.2.3'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.10.0'
-    implementation 'io.projectreactor:reactor-core:3.3.0.RELEASE'
+    implementation 'io.projectreactor:reactor-core:3.3.1.RELEASE'
     implementation 'org.eclipse.jetty.websocket:websocket-client:9.4.24.v20191120'
 
     testImplementation 'org.codehaus.groovy:groovy-all:2.5.7'
