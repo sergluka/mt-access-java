@@ -82,6 +82,10 @@ public class RpcClient implements AutoCloseable {
         return makeRequest(method, payload).map(response -> parse(response, typeReference));
     }
 
+    public <I, T> Mono<T> call(String method, TypeReference<T> typeReference) {
+        return makeRequest(method, null).map(response -> parse(response, typeReference));
+    }
+
     public <T> Mono<T> call(String method, Class<T> resultClass) {
         return makeRequest(method, null).map(response -> parse(response, resultClass));
     }

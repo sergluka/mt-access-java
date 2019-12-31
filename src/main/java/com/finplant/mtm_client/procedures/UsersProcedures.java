@@ -10,10 +10,10 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 import java.util.Map;
 
-public class UserProcedures {
+public class UsersProcedures {
     private final RpcClient client;
 
-    public UserProcedures(RpcClient client) {
+    public UsersProcedures(RpcClient client) {
         this.client = client;
     }
 
@@ -30,16 +30,20 @@ public class UserProcedures {
                      .flatMapMany(Flux::fromIterable);
     }
 
+    public Flux<UserRecord> getAll() {
+        return client.call("users.get.all", new TypeReference<List<UserRecord>>() {}).flatMapMany(Flux::fromIterable);
+    }
+
     public Mono<UserRecord> get(Integer login) {
         return get(List.of(login)).single();
     }
 
-    public Mono<Void> del(List<Integer> logins) {
+    public Mono<Void> delete(List<Integer> logins) {
         return client.call("users.del", Map.of("logins", logins));
     }
 
-    public Mono<Void> del(Integer login) {
-        return del(List.of(login));
+    public Mono<Void> delete(Integer login) {
+        return delete(List.of(login));
     }
 
     public Flux<UserRecord> subscribe() {

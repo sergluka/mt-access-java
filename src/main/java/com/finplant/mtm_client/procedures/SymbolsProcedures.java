@@ -9,13 +9,13 @@ import com.finplant.mtm_client.dto.Tick;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public class SymbolProcedures {
+public class SymbolsProcedures {
 
     public static final int CALL_TIMEOUT_S = 10;
 
     private final RpcClient client;
 
-    public SymbolProcedures(RpcClient client) {
+    public SymbolsProcedures(RpcClient client) {
         this.client = client;
     }
 

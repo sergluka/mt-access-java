@@ -12,8 +12,8 @@ public class WsClientImpl implements WebSocketListener {
 
     private final ReplayProcessor<Boolean> connectionProcessor = ReplayProcessor.cacheLastOrDefault(false);
     private final DirectProcessor<String> messageProcessor = DirectProcessor.create();
-    private Session session;
 
+    private Session session;
     private MonoSink<Void> disconnectSink;
 
     @Override
@@ -79,7 +79,7 @@ public class WsClientImpl implements WebSocketListener {
                 disconnectSink.success();
                 return;
             }
-            session.close(new CloseStatus(StatusCode.NORMAL, "Client disconnects"));
+            session.close(new CloseStatus(StatusCode.NORMAL, "Client disconnected"));
         });
     }
 

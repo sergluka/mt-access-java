@@ -1,10 +1,7 @@
 package com.finplant.mtm_client
 
-import com.finplant.mtm_client.dto.ConCommon
-import com.finplant.mtm_client.dto.ConGroup
-import com.finplant.mtm_client.dto.ConManager
-import com.finplant.mtm_client.dto.ConManagerSecurity
-import com.finplant.mtm_client.dto.UserRecord
+import com.finplant.mtm_client.dto.*
+import com.finplant.mtm_client.procedures.OrderProcedures
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
@@ -36,8 +33,53 @@ class MtmClientTest extends Specification {
         client.connectToMt(MT_URL, MT_LOGIN, MT_PASSWORD, Duration.ofSeconds(10)).block(Duration.ofSeconds(30))
     }
 
+    def setup() {
+        cleanupMt()
+    }
+
     def cleanupSpec() {
         client.disconnect().block(Duration.ofSeconds(30))
+    }
+
+    // TODO: cleanup all managers, except "1"
+    def cleanupMt() {
+        client.users().getAll()
+                .filter { it.login != 1 }
+                .flatMap { client.users().delete(it.login) }
+                .blockLast(Duration.ofSeconds(30))
+    }
+
+    def addUser(def deposit = 1000000.0) {
+        def user = UserRecord.builder()
+                .login(100)
+                .enable(true)
+                .group("miniforex")
+                .enableChangePassword(true)
+                .readOnly(false)
+                .enableOtp(false)
+                .passwordPhone("PhonePass")
+                .name("Johans Smits")
+                .country("Latvia")
+                .email("sergey.lukashevich@finplant.com")
+                .comment("User comment")
+                .leverage(10000)
+                .sendReports(false)
+                .password("Trader")
+                .passwordInvestor("Investor")
+                .build()
+        def login = client.users().add(user).block(Duration.ofSeconds(3))
+
+        if (deposit > 0.0) {
+            def request = OrderProcedures.BalanceOrderParameters.builder()
+                    .login(login)
+                    .command(TradeRecord.Command.BALANCE)
+                    .amount(1000000.0)
+                    .comment("Initial deposit")
+                    .build()
+            client.orders().balance(request).block()
+        }
+
+        return login
     }
 
     def "smoke"() {
@@ -98,7 +140,6 @@ class MtmClientTest extends Specification {
         assertThat(config2).isEqualToIgnoringNullFields(config1)
         assertThat(config2.owner).isNotEmpty()
         assertThat(config2.adapters).isNotEmpty()
-        assertThat(config2.optimizationLastTime).isNotNull()
         assertThat(config2.serverVersion).isPositive()
         assertThat(config2.serverBuild).isPositive()
         assertThat(config2.lastOrder).isPositive()
@@ -109,7 +150,7 @@ class MtmClientTest extends Specification {
     def "Validate group config"() {
 
         given:
-        client.config().group().delete("test").onErrorResume { Mono.empty() }.block()
+        client.config().groups().delete("test").onErrorResume { Mono.empty() }.block()
 
         when:
         def group1 = ConGroup.builder()
@@ -153,7 +194,7 @@ class MtmClientTest extends Specification {
                 .newsLanguages(Set.of("ru-RU", "en-EN"))
                 .build()
 
-        client.config().group().add(group1).block(Duration.ofSeconds(10))
+        client.config().groups().add(group1).block(Duration.ofSeconds(10))
 
 //        sleep(60000)
 
@@ -161,7 +202,7 @@ class MtmClientTest extends Specification {
         Flux.merge(client.localConnection().next(), client.connectToMt(MT_URL, 1, "manager", Duration.ofSeconds(10)))
                 .blockFirst()
 
-        def group2 = client.config().group().get("test").block(Duration.ofSeconds(10))
+        def group2 = client.config().groups().get("test").block(Duration.ofSeconds(10))
 
         then:
         assertThat(group2).isEqualToIgnoringNullFields(group1)
@@ -170,8 +211,6 @@ class MtmClientTest extends Specification {
     def "Validate user record"() {
 
         given:
-        client.user().del(100).onErrorResume { Mono.empty() }.block()
-
         def user1 = UserRecord.builder()
                 .login(100)
                 .enable(true)
@@ -204,7 +243,7 @@ class MtmClientTest extends Specification {
                 .build()
 
         when:
-        def newLogin = client.user().add(user1).timeout(Duration.ofSeconds(3)).block()
+        def newLogin = client.users().add(user1).timeout(Duration.ofSeconds(3)).block()
 
         then:
         newLogin == 100
@@ -214,14 +253,13 @@ class MtmClientTest extends Specification {
         user1.password = null
         user1.passwordInvestor = null
 
-        def user2 = client.user().get(newLogin).timeout(Duration.ofSeconds(30)).block()
+        def user2 = client.users().get(newLogin).timeout(Duration.ofSeconds(30)).block()
 
         then:
         assertThat(user2).isEqualToIgnoringNullFields(user1)
 
         assertThat(user2.lastDate).isBeforeOrEqualTo(LocalDateTime.now())
         assertThat(user2.registrationDate).isBeforeOrEqualTo(LocalDateTime.now())
-        assertThat(user2.timestamp).isBeforeOrEqualTo(LocalDateTime.now())
         assertThat(user2.lastIp).isEqualTo("0.0.0.0")
         assertThat(user2.prevMonthBalance).isEqualTo(0.0)
         assertThat(user2.prevDayBalance).isEqualTo(0.0)
@@ -266,8 +304,8 @@ class MtmClientTest extends Specification {
                 .build()
 
         expect:
-        StepVerifier.create(client.user().subscribe())
-                .then { client.user().add(user1).timeout(Duration.ofSeconds(3)).block() }
+        StepVerifier.create(client.users().subscribe())
+                .then { client.users().add(user1).timeout(Duration.ofSeconds(3)).block() }
                 .assertNext { it.login == 101 }
                 .thenCancel()
                 .verify(Duration.ofSeconds(10))
@@ -276,7 +314,7 @@ class MtmClientTest extends Specification {
     def "Validate managers"() {
 
         given:
-        client.config().manager().delete(123).onErrorResume { Mono.empty() }.block()
+        client.config().managers().delete(123).onErrorResume { Mono.empty() }.block()
 
         def forexSecurity = ConManagerSecurity.builder()
                 .enable(true)
@@ -321,8 +359,8 @@ class MtmClientTest extends Specification {
                 .build()
 
         when:
-        client.config().manager().add(manager1).timeout(Duration.ofSeconds(30)).block()
-        def manager2 = client.config().manager().get(123).timeout(Duration.ofSeconds(30)).block()
+        client.config().managers().add(manager1).timeout(Duration.ofSeconds(30)).block()
+        def manager2 = client.config().managers().get(123).timeout(Duration.ofSeconds(30)).block()
 
         then:
         assertThat(manager2).isEqualToIgnoringGivenFields(manager1, "securities")
@@ -332,7 +370,11 @@ class MtmClientTest extends Specification {
 
     def "Get last prices for EURUSD"() {
 
+        given:
+        client.symbols().showSymbol("EURUSD").block()
+
         expect:
+        sleep(1000)
         StepVerifier.create(client.market().ticksGet("EURUSD"))
                 .assertNext {
                     assert it.time != null
@@ -340,20 +382,24 @@ class MtmClientTest extends Specification {
                     assert it.bid > 0.0
                 }
                 .verifyComplete()
+
+        cleanup:
+        client.symbols().hideSymbol("EURUSD").block()
     }
 
     def "Subscribe to EURUSD tick"() {
 
         given:
+        client.symbols().showSymbol("EURUSD").block()
+
+        sleep(1000)
         def tick = client.market().ticksGet("EURUSD").blockFirst()
         def newBid = tick.bid + 0.0001
         def newAsk = tick.ask + 0.0001
 
-        client.symbol().showSymbol("EURUSD").block()
-
         expect:
-        StepVerifier.create(client.symbol().subscribe())
-                .then { client.symbol().addTick("EURUSD", newBid, newAsk).block() }
+        StepVerifier.create(client.symbols().subscribe())
+                .then { client.symbols().addTick("EURUSD", newBid, newAsk).block() }
                 .assertNext {
                     assert it.time != null
                     assert it.bid == newBid
@@ -363,7 +409,386 @@ class MtmClientTest extends Specification {
                 .verify()
 
         cleanup:
-        client.symbol().hideSymbol("EURUSD").block()
+        client.symbols().hideSymbol("EURUSD").block()
+    }
+
+    // TODO: prepare users, symbols and etc before tests.
+    def "Open order"() {
+
+        given:
+        def login = addUser()
+
+        def openParams = OrderProcedures.OpenOrderParameters.builder()
+                .login(login)
+                .symbol("EURUSD")
+                .command(TradeRecord.Command.BUY)
+                .volume(0.01)
+                .price(2.0)
+                .build()
+
+        when:
+        def order = client.orders().open(openParams).block()
+
+        then:
+        sleep(1000)
+        def trade = client.orders().get(order).block()
+
+        trade.order == order
+        trade.login == login
+        trade.symbol == "EURUSD"
+        trade.command == TradeRecord.Command.BUY
+        trade.volume == 0.01
+        trade.openPrice == 2.0
+        trade.openTime != null
+        trade.closeTime == null
+    }
+
+    def "Open and modify order"() {
+
+        given:
+        def login = addUser()
+
+        def openParams = OrderProcedures.OpenOrderParameters.builder()
+                .login(login)
+                .symbol("EURUSD")
+                .command(TradeRecord.Command.BUY_STOP)
+                .volume(0.01)
+                .price(2.0)
+                .build()
+
+        def modifyParams = OrderProcedures.ModifyOrderParameters.builder()
+                .price(2.1)
+                .stopLoss(1.0)
+                .takeProfit(1000.0)
+                .expiration(LocalDateTime.of(2025, 12, 1, 23, 0, 0))
+                .comment("new comment")
+                .build()
+
+        def order = client.orders().open(openParams).block()
+
+        when:
+        def modifyParams2 = modifyParams.toBuilder().order(order).build()
+        client.orders().modify(modifyParams2).block()
+
+        then:
+        sleep(1000)
+        def trade = client.orders().get(order).block()
+
+        trade.openPrice == 2.1
+        trade.stopLoss == 1.0
+        trade.takeProfit == 1000.0
+        trade.expiration == LocalDateTime.of(2025, 12, 1, 23, 0, 0)
+        trade.comment == "new comment"
+    }
+
+    def "Open and close order"() {
+
+        given:
+        def login = addUser()
+
+        def openParams = OrderProcedures.OpenOrderParameters.builder()
+                .login(login)
+                .symbol("EURUSD")
+                .command(TradeRecord.Command.SELL)
+                .volume(0.02)
+                .price(2.0)
+                .build()
+
+        def order = client.orders().open(openParams).block()
+
+        when:
+        client.orders().close(order, 2.0, 0.02).block()
+
+        then:
+        def trade = client.orders().getHistory(login, null, null).blockLast()
+
+        trade.order == order
+        trade.profit == 0.0
+        trade.closeTime != null
+    }
+
+    def "Open and cancel LMT order"() {
+
+        given:
+        def login = addUser()
+
+        def openParams = OrderProcedures.OpenOrderParameters.builder()
+                .login(login)
+                .symbol("EURUSD")
+                .command(TradeRecord.Command.SELL_LIMIT)
+                .volume(0.02)
+                .price(2.0)
+                .build()
+
+        def order = client.orders().open(openParams).block()
+
+        when:
+        client.orders().delete(order, TradeRecord.Command.SELL_LIMIT).block()
+
+        then:
+        def trade = client.orders().getHistory(login, null, null).blockLast()
+
+        trade.order == order
+        trade.profit == 0.0
+        trade.closeTime != null
+        trade.comment == "cancelled by dealer"
+    }
+
+    def "Open and activate LMT order"() {
+
+        given:
+        def login = addUser()
+
+        def openParams = OrderProcedures.OpenOrderParameters.builder()
+                .login(login)
+                .symbol("EURUSD")
+                .command(TradeRecord.Command.SELL_LIMIT)
+                .volume(0.02)
+                .price(2.0)
+                .build()
+
+        def order = client.orders().open(openParams).block()
+
+        when:
+        client.orders().activate(order, 10.0).block()
+
+        then:
+        sleep(1000)
+        def trade = client.orders().get(order).block()
+
+        trade.command == TradeRecord.Command.SELL;
+        trade.openPrice == 10.0
+    }
+
+    def "Add balance to user"() {
+
+        given:
+        def login = addUser(0.0)
+        def balance = OrderProcedures.BalanceOrderParameters.builder()
+                .login(login)
+                .command(TradeRecord.Command.BALANCE)
+                .amount(111.11)
+                .build()
+
+        when:
+        client.orders().balance(balance).block()
+
+        then:
+        client.users().get(login).block().balance == 111.11
+        client.users().get(login).block().credit == 0.0
+    }
+
+    def "Add credit to user"() {
+
+        given:
+        def login = addUser(0.0)
+        def balance = OrderProcedures.BalanceOrderParameters.builder()
+                .login(login)
+                .command(TradeRecord.Command.CREDIT)
+                .expiration(LocalDateTime.of(2020, 1, 1, 12, 0, 0))
+                .amount(111.11)
+                .build()
+
+        when:
+        client.orders().balance(balance).block()
+
+        then:
+        client.users().get(login).block().balance == 0.0
+        client.users().get(login).block().credit == 111.11
+    }
+
+    def "Close-by orders"() {
+
+        given:
+        def login = addUser()
+
+        def openParams1 = OrderProcedures.OpenOrderParameters.builder()
+                .login(login)
+                .symbol("EURUSD")
+                .command(TradeRecord.Command.BUY)
+                .volume(0.02)
+                .price(2.0)
+                .build()
+        def openParams2 = OrderProcedures.OpenOrderParameters.builder()
+                .login(login)
+                .symbol("EURUSD")
+                .command(TradeRecord.Command.SELL)
+                .volume(0.05)
+                .price(2.0)
+                .build()
+
+        def order1 = client.orders().open(openParams1).block()
+        def order2 = client.orders().open(openParams2).block()
+
+        when:
+        client.orders().closeBy(order1, order2).block()
+
+        then:
+        def closedTrades = client.orders().getHistory(login, null, null).takeLast(2).collectList().block()
+
+        closedTrades[0].with {
+            assert it.order == order1
+            assert it.volume == 0.02
+            assert it.command == TradeRecord.Command.BUY
+            assert it.comment == "partial close"
+        }
+        closedTrades[1].with {
+            assert it.order == order2
+            assert it.volume == 0.00
+            assert it.command == TradeRecord.Command.SELL
+            assert it.comment == "close hedge by #${order1}"
+        }
+
+        def trade2 = client.orders().get(order2 + 1).block()
+
+        trade2.order == order2 + 1
+        trade2.volume == 0.03
+        trade2.command == TradeRecord.Command.SELL
+        trade2.comment == "from #${order1}"
+    }
+
+    def "Close all orders"() {
+
+        given:
+        def login = addUser()
+
+        def openParams1 = OrderProcedures.OpenOrderParameters.builder()
+                .login(login)
+                .symbol("EURUSD")
+                .command(TradeRecord.Command.BUY)
+                .volume(0.07)
+                .price(2.0)
+                .build()
+        def openParams2 = OrderProcedures.OpenOrderParameters.builder()
+                .login(login)
+                .symbol("EURUSD")
+                .command(TradeRecord.Command.SELL)
+                .volume(0.05)
+                .price(2.0)
+                .build()
+        def openParams3 = OrderProcedures.OpenOrderParameters.builder()
+                .login(login)
+                .symbol("EURUSD")
+                .command(TradeRecord.Command.SELL)
+                .volume(0.10)
+                .price(2.0)
+                .build()
+
+        def order1 = client.orders().open(openParams1).block()
+        def order2 = client.orders().open(openParams2).block()
+        def order3 = client.orders().open(openParams3).block()
+
+        when:
+        client.orders().closeAll(login, "EURUSD").block()
+
+        then:
+        sleep(1000)
+        def closedTrades = client.orders().getHistory(100, null, null).takeLast(3).collectList().block()
+
+        closedTrades[0].with {
+            assert it.order == order2
+            assert it.volume == 0.00
+            assert it.command == TradeRecord.Command.SELL
+            assert it.comment == "close hedge by #${order1}"
+        }
+        closedTrades[1].with {
+            assert it.order == order3
+            assert it.volume == 0.02
+            assert it.command == TradeRecord.Command.SELL
+            assert it.comment == "partial close"
+        }
+        closedTrades[2].with {
+            assert it.order == order3 + 1
+            assert it.volume == 0.00
+            assert it.command == TradeRecord.Command.BUY
+            assert it.comment == "close hedge by #${order3}"
+        }
+
+        def openedTrades = client.orders().getAll().collectList().block()
+        openedTrades.size() == 1
+
+        openedTrades[0].with {
+            assert it.order == order3 + 2
+            assert it.volume == 0.08
+            assert it.command == TradeRecord.Command.SELL
+            assert it.comment == "partial close"
+        }
+    }
+
+    def "Get all open orders"() {
+
+        given:
+        def login = addUser()
+
+        def openParams = OrderProcedures.OpenOrderParameters.builder()
+                .login(login)
+                .symbol("EURUSD")
+                .command(TradeRecord.Command.SELL)
+                .volume(0.02)
+                .price(2.0)
+                .build()
+
+        def order1 = client.orders().open(openParams).block()
+        def order2 = client.orders().open(openParams).block()
+
+        when:
+        sleep(1000)
+        def openOrders = client.orders().getAll().collectList().block()
+
+        then:
+        assertThat(openOrders).extracting("order").contains(order1, order2)
+    }
+
+    def "Get all open orders for user"() {
+
+        given:
+        def login = addUser()
+
+        def openParams = OrderProcedures.OpenOrderParameters.builder()
+                .login(login)
+                .symbol("EURUSD")
+                .command(TradeRecord.Command.SELL)
+                .volume(0.02)
+                .price(2.0)
+                .build()
+
+        def order1 = client.orders().open(openParams).block()
+        def order2 = client.orders().open(openParams).block()
+
+        when:
+        sleep(1000)
+        def openOrders = client.orders().getByLogin(login, "miniforex").collectList().block()
+
+        then:
+        assertThat(openOrders).extracting("order").containsExactly(order1, order2)
+    }
+
+    def "Subscribe to trades"() {
+
+        given:
+        def login = addUser()
+
+//         Flush all incoming events from previous tests, if exists
+        client.orders().subscribe().timeout(Duration.ofSeconds(1), Mono.empty()).blockLast()
+
+        def openParams = OrderProcedures.OpenOrderParameters.builder()
+                .login(login)
+                .symbol("EURUSD")
+                .command(TradeRecord.Command.SELL)
+                .volume(0.02)
+                .price(2.0)
+                .build()
+
+        expect:
+        def order
+
+        StepVerifier.create(client.orders().subscribe())
+                .then { order = client.orders().open(openParams).block() }
+                .assertNext {
+                    assert it.order == order
+                }
+                .thenCancel()
+                .verify()
     }
 
     @Ignore("Works only with plugin with dummy `MtSrvManagerProtocol`")

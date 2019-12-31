@@ -13,25 +13,25 @@ import reactor.core.publisher.Mono;
 public class ConfigProcedures {
 
     private final ConfigCommonProcedures configCommonProcedures;
-    private final ConfigGroupProcedures configGroupProcedures;
-    private final ConfigManagerProcedures configManagerProcedures;
+    private final ConfigGroupsProcedures configGroupsProcedures;
+    private final ConfigManagersProcedures configManagersProcedures;
 
     public ConfigProcedures(RpcClient client) {
         configCommonProcedures = new ConfigCommonProcedures(client);
-        configGroupProcedures = new ConfigGroupProcedures(client);
-        configManagerProcedures = new ConfigManagerProcedures(client);
+        configGroupsProcedures = new ConfigGroupsProcedures(client);
+        configManagersProcedures = new ConfigManagersProcedures(client);
     }
 
     public ConfigCommonProcedures common() {
         return configCommonProcedures;
     }
 
-    public ConfigGroupProcedures group() {
-        return configGroupProcedures;
+    public ConfigGroupsProcedures groups() {
+        return configGroupsProcedures;
     }
 
-    public ConfigManagerProcedures manager() {
-        return configManagerProcedures;
+    public ConfigManagersProcedures managers() {
+        return configManagersProcedures;
     }
 
     private static class ConfigCommonProcedures {
@@ -50,10 +50,10 @@ public class ConfigProcedures {
         }
     }
 
-    private static class ConfigGroupProcedures {
+    private static class ConfigGroupsProcedures {
         private final RpcClient client;
 
-        public ConfigGroupProcedures(RpcClient client) {
+        public ConfigGroupsProcedures(RpcClient client) {
             this.client = client;
         }
 
@@ -78,10 +78,10 @@ public class ConfigProcedures {
         }
     }
 
-    private static class ConfigManagerProcedures {
+    private static class ConfigManagersProcedures {
         private final RpcClient client;
 
-        public ConfigManagerProcedures(RpcClient client) {
+        public ConfigManagersProcedures(RpcClient client) {
             this.client = client;
         }
 

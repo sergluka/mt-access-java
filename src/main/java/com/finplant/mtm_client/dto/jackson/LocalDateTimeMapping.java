@@ -23,7 +23,12 @@ public class LocalDateTimeMapping {
         public LocalDateTime deserialize(JsonParser parser, DeserializationContext ctx)
               throws IOException {
 
-            return LocalDateTime.ofEpochSecond(parser.getLongValue(), 0, ZoneOffset.UTC);
+            long second = parser.getLongValue();
+            if (second == 0) {
+                return null;
+            }
+
+            return LocalDateTime.ofEpochSecond(second, 0, ZoneOffset.UTC);
         }
     }
 

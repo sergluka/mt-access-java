@@ -6,15 +6,17 @@ import java.time.Duration;
 import com.finplant.mtm_client.dto.internal.Registration;
 import com.finplant.mtm_client.procedures.ConfigProcedures;
 import com.finplant.mtm_client.procedures.MarketProcedures;
+import com.finplant.mtm_client.procedures.OrderProcedures;
 import com.finplant.mtm_client.procedures.ProtocolExtensionsProcedures;
-import com.finplant.mtm_client.procedures.SymbolProcedures;
-import com.finplant.mtm_client.procedures.UserProcedures;
+import com.finplant.mtm_client.procedures.SymbolsProcedures;
+import com.finplant.mtm_client.procedures.UsersProcedures;
 
 import lombok.val;
 import reactor.core.Disposable;
 import reactor.core.Disposables;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.tools.agent.ReactorDebugAgent;
 import reactor.util.annotation.NonNull;
 
 public class MtmClient implements AutoCloseable {
@@ -24,17 +26,22 @@ public class MtmClient implements AutoCloseable {
     private final RpcClient client;
     private final ConfigProcedures configProcedures;
     private final ProtocolExtensionsProcedures protocolExtensionsProcedures;
-    private final UserProcedures userProcedures;
-    private final SymbolProcedures symbolProcedures;
+    private final UsersProcedures userProcedures;
+    private final SymbolsProcedures symbolProcedures;
     private final MarketProcedures marketProcedures;
 
+    private final OrderProcedures orderProcedure;
+
     public MtmClient() {
+        ReactorDebugAgent.init();
+
         client = new RpcClient(new WsClient());
         configProcedures = new ConfigProcedures(client);
         protocolExtensionsProcedures = new ProtocolExtensionsProcedures(client);
-        userProcedures = new UserProcedures(client);
-        symbolProcedures = new SymbolProcedures(client);
+        userProcedures = new UsersProcedures(client);
+        symbolProcedures = new SymbolsProcedures(client);
         marketProcedures = new MarketProcedures(client);
+        orderProcedure = new OrderProcedures(client);
     }
 
     @Override
@@ -73,11 +80,11 @@ public class MtmClient implements AutoCloseable {
         return configProcedures;
     }
 
-    public UserProcedures user() {
+    public UsersProcedures users() {
         return userProcedures;
     }
 
-    public SymbolProcedures symbol() {
+    public SymbolsProcedures symbols() {
         return symbolProcedures;
     }
 
@@ -85,6 +92,9 @@ public class MtmClient implements AutoCloseable {
         return marketProcedures;
     }
 
+    public OrderProcedures orders() {
+        return orderProcedure;
+    }
     public ProtocolExtensionsProcedures protocolExtensions() {
         return protocolExtensionsProcedures;
     }

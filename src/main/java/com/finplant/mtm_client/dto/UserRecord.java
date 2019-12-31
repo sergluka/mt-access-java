@@ -59,7 +59,7 @@ public class UserRecord {
     @JsonProperty("mqid")
     Integer mqid;
     @JsonProperty("user_color")
-    Integer userColor;
+    Long userColor;
     @JsonProperty("api_data")
     byte[] apiData;
 
@@ -110,7 +110,7 @@ public class UserRecord {
                       String state, String zipcode, String address, String leadSource, String phone, String email,
                       String comment, String id, String status, Integer leverage, Integer agentAccount,
                       BigDecimal taxes, Boolean sendReports, Integer mqid,
-                      Integer userColor, byte[] apiData, String password, String passwordInvestor) {
+                      Long userColor, byte[] apiData, String password, String passwordInvestor) {
         this.login = login;
         this.group = group;
         this.enable = enable;
