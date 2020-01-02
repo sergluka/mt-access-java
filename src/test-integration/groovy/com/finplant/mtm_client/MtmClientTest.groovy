@@ -5,6 +5,7 @@ import com.finplant.mtm_client.procedures.OrderProcedures
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
+import reactor.tools.agent.ReactorDebugAgent
 import spock.lang.Ignore
 import spock.lang.Shared
 import spock.lang.Specification
@@ -29,6 +30,8 @@ class MtmClientTest extends Specification {
     private MtmClient client = new MtmClient()
 
     def setupSpec() {
+        ReactorDebugAgent.init();
+
         client.connect(URI.create(URL)).block(Duration.ofSeconds(30))
         client.connectToMt(MT_URL, MT_LOGIN, MT_PASSWORD, Duration.ofSeconds(10)).block(Duration.ofSeconds(30))
     }
@@ -85,6 +88,16 @@ class MtmClientTest extends Specification {
     def "smoke"() {
         expect:
         true
+    }
+
+    def "reconnect"() {
+        when:
+        client.disconnect().block(Duration.ofSeconds(10))
+        client.connect(URI.create(URL)).block(Duration.ofSeconds(10))
+        client.connectToMt(MT_URL, MT_LOGIN, MT_PASSWORD, Duration.ofSeconds(10)).block()
+
+        then:
+        notThrown()
     }
 
     def "Expect for connection status after connect"() {
@@ -196,16 +209,31 @@ class MtmClientTest extends Specification {
 
         client.config().groups().add(group1).block(Duration.ofSeconds(10))
 
-//        sleep(60000)
-
         client.disconnect().block(Duration.ofSeconds(10))
-        Flux.merge(client.localConnection().next(), client.connectToMt(MT_URL, 1, "manager", Duration.ofSeconds(10)))
-                .blockFirst()
+        client.connect(URI.create(URL)).block(Duration.ofSeconds(10))
+        client.connectToMt(MT_URL, MT_LOGIN, MT_PASSWORD, Duration.ofSeconds(10)).block()
 
         def group2 = client.config().groups().get("test").block(Duration.ofSeconds(10))
 
         then:
         assertThat(group2).isEqualToIgnoringNullFields(group1)
+    }
+
+    def "Subscribe to groups"() {
+
+        given:
+        client.config().groups().delete("test").onErrorResume { Mono.empty() }.block()
+
+        def group1 = ConGroup.builder()
+                .group("test")
+                .build()
+
+        expect:
+        StepVerifier.create(client.config().groups().subscribe())
+                .then { client.config().groups().add(group1).block(Duration.ofSeconds(10)) }
+                .assertNext { assert it.group == "test" }
+                .thenCancel()
+                .verify()
     }
 
     def "Validate user record"() {
@@ -585,11 +613,12 @@ class MtmClientTest extends Specification {
         def balance = OrderProcedures.BalanceOrderParameters.builder()
                 .login(login)
                 .command(TradeRecord.Command.CREDIT)
-                .expiration(LocalDateTime.of(2020, 1, 1, 12, 0, 0))
+                .expiration(LocalDateTime.of(2030, 1, 1, 12, 0, 0))
                 .amount(111.11)
                 .build()
 
         when:
+        sleep(1000)
         client.orders().balance(balance).block()
 
         then:
@@ -683,7 +712,10 @@ class MtmClientTest extends Specification {
 
         then:
         sleep(1000)
-        def closedTrades = client.orders().getHistory(100, null, null).takeLast(3).collectList().block()
+        def closedTrades = client.orders().getHistory(100, null, null)
+                .takeLast(3)
+                .collectSortedList { o1, o2 -> o1.order <=> o2.order }
+                .block()
 
         closedTrades[0].with {
             assert it.order == order2

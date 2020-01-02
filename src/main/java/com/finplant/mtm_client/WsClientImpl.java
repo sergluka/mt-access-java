@@ -31,21 +31,17 @@ public class WsClientImpl implements WebSocketListener {
     public void onWebSocketClose(int statusCode, String reason) {
 
         log.info("Connection is closed. code={}, reason={}", statusCode, reason);
-        connectionProcessor.onNext(false);
+
+        if (statusCode == StatusCode.NO_CLOSE) {
+            log.error("Connection closed abnormally");
+        } else if (statusCode != StatusCode.NORMAL) {
+            log.error("Connection closed because of error");
+        }
 
         if (disconnectSink != null) {
             disconnectSink.success();
         }
-
-        if (statusCode == StatusCode.NO_CLOSE) {
-            log.error("Connection closed abnormally");
-            messageProcessor.onComplete();
-        } else if (statusCode != StatusCode.NORMAL) {
-            log.error("Connection closed because of error");
-            messageProcessor.onError(new Errors.ConnectionUnexpectedCloseError(statusCode));
-        } else {
-            messageProcessor.onComplete();
-        }
+        connectionProcessor.onNext(false);
 
         session = null;
     }

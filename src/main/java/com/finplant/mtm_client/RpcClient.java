@@ -38,7 +38,7 @@ public class RpcClient implements AutoCloseable {
     private final WsClient client;
 
     private final Map<Long, MonoSink<JsonNode>> requests = new ConcurrentHashMap<>();
-    private final Map<String, FluxSink<JsonNode>> events = new ConcurrentHashMap<>();
+    private final Map<String, FluxSink<JsonNode>> subscriptions = new ConcurrentHashMap<>();
 
     private final ObjectMapper mapper = new ObjectMapper();
     private final AtomicLong idCounter = new AtomicLong(0);
@@ -47,12 +47,17 @@ public class RpcClient implements AutoCloseable {
     public RpcClient(WsClient client) {
         this.client = client;
 
-        val disposable = client.listen()
+        val messagesDisposable = client.listen()
                                .map(this::toJsonNode)
                                .doOnError(this::logMessageError)
                                .retry()
                                .subscribe(this::onMessage, this::logMessageError);
-        disposables.add(disposable);
+        disposables.add(messagesDisposable);
+
+        val disconnectDisposable = client.connectionStatus()
+              .filter(connected -> !connected)
+              .subscribe(connected -> cleanup());
+        disposables.add(disconnectDisposable);
 
         initializeMapper();
     }
@@ -102,6 +107,16 @@ public class RpcClient implements AutoCloseable {
         return makeSubscription(subscription, eventClass);
     }
 
+    private void cleanup() {
+
+        log.debug("Cleanup");
+
+        requests.values().forEach(MonoSink::success);
+        requests.clear();
+        subscriptions.values().forEach(FluxSink::complete);
+        subscriptions.clear();
+    }
+
     private <T> Mono<JsonNode> makeRequest(String method, T payload) {
 
         return Mono.defer(() -> {
@@ -121,7 +136,7 @@ public class RpcClient implements AutoCloseable {
         val subscribeRequest = call("subscribe", new Subscription(name), eventClass);
         val unSubscribeRequest = call("unsubscribe", new Subscription(name), eventClass);
 
-        val storeSubscription = Flux.<JsonNode>create(sink -> events.put(name, sink))
+        val storeSubscription = Flux.<JsonNode>create(sink -> subscriptions.put(name, sink))
               .<T>map(json -> parse(json, eventClass));
 
         return Flux.concat(subscribeRequest, storeSubscription, unSubscribeRequest);
@@ -160,7 +175,7 @@ public class RpcClient implements AutoCloseable {
             return false;
         }
 
-        val sink = events.get(eventNode.asText());
+        val sink = subscriptions.get(eventNode.asText());
         if (sink == null) {
             throw new IllegalStateException(String.format("Got unsubscribed event: %s", json));
         }

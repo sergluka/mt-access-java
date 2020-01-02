@@ -33,8 +33,6 @@ public class MtmClient implements AutoCloseable {
     private final OrderProcedures orderProcedure;
 
     public MtmClient() {
-        ReactorDebugAgent.init();
-
         client = new RpcClient(new WsClient());
         configProcedures = new ConfigProcedures(client);
         protocolExtensionsProcedures = new ProtocolExtensionsProcedures(client);
