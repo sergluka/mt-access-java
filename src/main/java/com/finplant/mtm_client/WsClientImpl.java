@@ -7,8 +7,10 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoSink;
 import reactor.core.publisher.ReplayProcessor;
 
+import java.nio.ByteBuffer;
+
 @Slf4j
-public class WsClientImpl implements WebSocketListener {
+public class WsClientImpl implements WebSocketListener, WebSocketPingPongListener {
 
     private final ReplayProcessor<Boolean> connectionProcessor = ReplayProcessor.cacheLastOrDefault(false);
     private final DirectProcessor<String> messageProcessor = DirectProcessor.create();
@@ -56,6 +58,16 @@ public class WsClientImpl implements WebSocketListener {
     @Override
     public void onWebSocketError(Throwable cause) {
         log.error("Websocket error", cause);
+    }
+
+    @Override
+    public void onWebSocketPing(ByteBuffer payload) {
+        log.trace("PING");
+    }
+
+    @Override
+    public void onWebSocketPong(ByteBuffer payload) {
+        log.trace("PONG");
     }
 
     public ReplayProcessor<Boolean> getConnectionProcessor() {

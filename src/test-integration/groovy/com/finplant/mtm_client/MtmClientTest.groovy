@@ -2,7 +2,6 @@ package com.finplant.mtm_client
 
 import com.finplant.mtm_client.dto.*
 import com.finplant.mtm_client.procedures.OrderProcedures
-import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import reactor.tools.agent.ReactorDebugAgent
@@ -100,13 +99,26 @@ class MtmClientTest extends Specification {
         notThrown()
     }
 
-    def "Expect for connection status after connect"() {
-        setup:
-        true
+    def "Second connection to MT should cause an error"() {
+        when:
+        client.connectToMt(MT_URL, MT_LOGIN, MT_PASSWORD, Duration.ofSeconds(10)).block()
+
+        then:
+        thrown(Errors.MtmError)
+    }
+
+    def "Expect for MT connection status changes after disconnect/connect"() {
 
         expect:
-        Flux.merge(client.remoteConnection(), client.connectToMt(MT_URL, MT_LOGIN, MT_PASSWORD, Duration.ofSeconds(10)))
-                .blockFirst()
+        StepVerifier.create(client.remoteConnection())
+                .expectSubscription()
+                .expectNoEvent(Duration.ofSeconds(1))
+                .then { client.disconnectFromMt().block(Duration.ofSeconds(10)) }
+                .expectNext(false)
+                .then { client.connectToMt(MT_URL, MT_LOGIN, MT_PASSWORD, Duration.ofSeconds(10)).block(Duration.ofSeconds(10)) }
+                .expectNext(true)
+                .thenCancel()
+                .verify(Duration.ofSeconds(30))
     }
 
     def "Validate common config"() {
@@ -821,6 +833,13 @@ class MtmClientTest extends Specification {
                 }
                 .thenCancel()
                 .verify()
+    }
+
+    @Ignore("Requires manual MT server restarts")
+    def "Long connection"() {
+
+        expect:
+        sleep(1000000)
     }
 
     @Ignore("Works only with plugin with dummy `MtSrvManagerProtocol`")
