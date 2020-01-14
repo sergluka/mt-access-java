@@ -5,6 +5,7 @@ import java.time.Duration;
 
 import com.finplant.mtm_client.dto.internal.Registration;
 import com.finplant.mtm_client.procedures.ConfigProcedures;
+import com.finplant.mtm_client.procedures.DealingProcedures;
 import com.finplant.mtm_client.procedures.MarketProcedures;
 import com.finplant.mtm_client.procedures.OrderProcedures;
 import com.finplant.mtm_client.procedures.ProtocolExtensionsProcedures;
@@ -29,6 +30,7 @@ public class MtmClient implements AutoCloseable {
     private final UsersProcedures userProcedures;
     private final SymbolsProcedures symbolProcedures;
     private final MarketProcedures marketProcedures;
+    private final DealingProcedures dealingProcedures;
 
     private final OrderProcedures orderProcedure;
 
@@ -40,6 +42,7 @@ public class MtmClient implements AutoCloseable {
         symbolProcedures = new SymbolsProcedures(client);
         marketProcedures = new MarketProcedures(client);
         orderProcedure = new OrderProcedures(client);
+        dealingProcedures = new DealingProcedures(client);
     }
 
     @Override
@@ -93,6 +96,11 @@ public class MtmClient implements AutoCloseable {
     public OrderProcedures orders() {
         return orderProcedure;
     }
+
+    public DealingProcedures dealing() {
+        return dealingProcedures;
+    }
+
     public ProtocolExtensionsProcedures protocolExtensions() {
         return protocolExtensionsProcedures;
     }

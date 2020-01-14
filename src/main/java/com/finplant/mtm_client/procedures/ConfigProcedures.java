@@ -73,7 +73,7 @@ public class ConfigProcedures {
             return client.call("config.group.del", Map.of("group", group));
         }
 
-        public Flux<ConGroup> subscribe() {
+        public Flux<ConGroup> listen() {
             return client.subscribe("group", ConGroup.class);
         }
     }

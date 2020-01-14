@@ -1,6 +1,7 @@
 package com.finplant.mtm_client
 
 import com.finplant.mtm_client.dto.*
+import com.finplant.mtm_client.procedures.DealingProcedures
 import com.finplant.mtm_client.procedures.OrderProcedures
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
@@ -241,7 +242,7 @@ class MtmClientTest extends Specification {
                 .build()
 
         expect:
-        StepVerifier.create(client.config().groups().subscribe())
+        StepVerifier.create(client.config().groups().listen())
                 .then { client.config().groups().add(group1).block(Duration.ofSeconds(10)) }
                 .assertNext { assert it.group == "test" }
                 .thenCancel()
@@ -344,7 +345,7 @@ class MtmClientTest extends Specification {
                 .build()
 
         expect:
-        StepVerifier.create(client.users().subscribe())
+        StepVerifier.create(client.users().listen())
                 .then { client.users().add(user1).timeout(Duration.ofSeconds(3)).block() }
                 .assertNext { it.login == 101 }
                 .thenCancel()
@@ -438,7 +439,7 @@ class MtmClientTest extends Specification {
         def newAsk = tick.ask + 0.0001
 
         expect:
-        StepVerifier.create(client.symbols().subscribe())
+        StepVerifier.create(client.symbols().listen())
                 .then { client.symbols().addTick("EURUSD", newBid, newAsk).block() }
                 .assertNext {
                     assert it.time != null
@@ -813,7 +814,7 @@ class MtmClientTest extends Specification {
         def login = addUser()
 
 //         Flush all incoming events from previous tests, if exists
-        client.orders().subscribe().timeout(Duration.ofSeconds(1), Mono.empty()).blockLast()
+        client.orders().listen().timeout(Duration.ofSeconds(1), Mono.empty()).blockLast()
 
         def openParams = OrderProcedures.OpenOrderParameters.builder()
                 .login(login)
@@ -826,7 +827,7 @@ class MtmClientTest extends Specification {
         expect:
         def order
 
-        StepVerifier.create(client.orders().subscribe())
+        StepVerifier.create(client.orders().listen())
                 .then { order = client.orders().open(openParams).block() }
                 .assertNext {
                     assert it.order == order
@@ -863,4 +864,98 @@ class MtmClientTest extends Specification {
                 .verifyComplete()
     }
 
+    @Ignore("Works only with manual trading via Terminal and symbol with Market execution")
+    def "Start dealing and confirm requests"() {
+
+        given:
+        def login = addUser()
+
+        TradeRequest request
+
+        expect:
+        StepVerifier.create(client.dealing().listen())
+                .assertNext {
+                    assert it.id > 0
+                    assert it.login == login
+                    assert it.manager == 1
+                    assert it.balance > 0.0
+                    assert it.trade.order == 0
+                    assert it.trade.type == TradeTransaction.Type.ORDER_MK_OPEN
+
+                    request = it
+                }
+                .thenCancel()
+                .verify(Duration.ofMinutes(10))
+
+        StepVerifier.create(client.orders().listen())
+                .then { client.dealing().confirm(request.id, 2.11, 2.12, DealingProcedures.ConfirmMode.NORMAL).block() }
+                .assertNext {
+                    assert it.login == login
+                    assert it.openPrice == 2.11 || it.openPrice == 2.12
+                }
+                .thenCancel()
+                .verify(Duration.ofSeconds(10))
+    }
+
+    @Ignore("Works only with manual trading via Terminal")
+    def "Start dealing and reject requests"() {
+
+        given:
+        def login = addUser()
+
+        TradeRequest request
+
+        expect:
+        StepVerifier.create(client.dealing().listen())
+                .assertNext {
+                    assert it.id > 0
+                    assert it.login == login
+                    assert it.manager == 1
+                    assert it.balance > 0.0
+                    assert it.trade.order == 0
+                    assert it.trade.type == TradeTransaction.Type.ORDER_IE_OPEN
+
+                    request = it
+                }
+                .thenCancel()
+                .verify(Duration.ofMinutes(10))
+
+        and:
+        when:
+        client.dealing().reject(request.id).block()
+
+        then:
+        notThrown()
+    }
+
+    @Ignore("Works only with manual trading via Terminal and symbol with Instant execution")
+    def "Start dealing and requote requests for IE execution"() {
+
+        given:
+        def login = addUser()
+
+        TradeRequest request
+
+        expect:
+        StepVerifier.create(client.dealing().listen())
+                .assertNext {
+                    assert it.id > 0
+                    assert it.login == login
+                    assert it.manager == 1
+                    assert it.balance > 0.0
+                    assert it.trade.order == 0
+                    assert it.trade.type == TradeTransaction.Type.ORDER_IE_OPEN
+
+                    request = it
+                }
+                .thenCancel()
+                .verify(Duration.ofMinutes(10))
+
+        and:
+        when:
+        client.dealing().requote(request.id, 1.0, 1.1).block()
+
+        then:
+        notThrown()
+    }
 }

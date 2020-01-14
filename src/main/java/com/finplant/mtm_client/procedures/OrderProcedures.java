@@ -89,7 +89,7 @@ public class OrderProcedures {
                      .flatMapMany(Flux::fromIterable);
     }
 
-    public Flux<TradeRecord> subscribe() {
+    public Flux<TradeRecord> listen() {
         return client.subscribe("trade", TradeRecord.class);
     }
 

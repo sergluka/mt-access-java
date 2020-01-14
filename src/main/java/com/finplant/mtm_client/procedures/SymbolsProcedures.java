@@ -23,7 +23,7 @@ public class SymbolsProcedures {
         return client.call("symbol.tick.add", Map.of("symbol", symbol, "bid", bid, "ask", ask));
     }
 
-    public Flux<Tick> subscribe() {
+    public Flux<Tick> listen() {
         return client.subscribe("tick", Tick.class);
     }
 

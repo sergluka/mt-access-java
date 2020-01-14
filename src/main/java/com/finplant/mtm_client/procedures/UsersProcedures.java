@@ -46,7 +46,7 @@ public class UsersProcedures {
         return delete(List.of(login));
     }
 
-    public Flux<UserRecord> subscribe() {
+    public Flux<UserRecord> listen() {
         return client.subscribe("user", UserRecord.class);
     }
 }
