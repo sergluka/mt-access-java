@@ -18,21 +18,24 @@ import java.time.ZoneOffset
 
 import static org.assertj.core.api.Assertions.assertThat
 
-class MtmClientTest extends Specification {
+class MtRemoteClientTest extends Specification {
 
-    public static final String URL = "ws://127.0.0.1:12344"
-    public static final String MT_URL = "127.0.0.1"
-    public static final int MT_LOGIN = 1
-    public static final String MT_PASSWORD = "manager"
+    private static final URI URL = URI.create("wss://localhost:12344")
+    private static final String keystorePassword = "zHRNZfWcwzLMRE4b4wGaaRkQHVGMpJ7d"
+
+    private static final String MT_URL = "127.0.0.1"
+    private static final int MT_LOGIN = 1
+    private static final String MT_PASSWORD = "manager"
 
     @Shared
     @Subject
-    private MtmClient client = new MtmClient()
+    private MtRemoteClient client = MtRemoteClient.createSecure(URL,
+            MtRemoteClientTest.classLoader.getResourceAsStream("keystore.jks"), keystorePassword, true)
 
     def setupSpec() {
         ReactorDebugAgent.init();
 
-        client.connect(URI.create(URL)).block(Duration.ofSeconds(30))
+        client.connect().block(Duration.ofSeconds(30))
         client.connectToMt(MT_URL, MT_LOGIN, MT_PASSWORD, Duration.ofSeconds(10)).block(Duration.ofSeconds(30))
     }
 

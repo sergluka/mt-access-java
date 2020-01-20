@@ -12,7 +12,7 @@ repositories {
     jcenter()
 }
 
-sourceCompatibility = 1.12
+sourceCompatibility = 1.8
 
 version = 0.1
 

@@ -13,9 +13,9 @@
             <pattern>%d{HH:mm:ss.SSS} | %-5level | %thread | %logger{36}: %msg%n</pattern>
         </encoder>
 
-        <file>logs/mtm-client.log</file>
+        <file>logs/mt-remote-client.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>logs/mtm-client-%d{yyyy-MM-dd}.log.zip</fileNamePattern>
+            <fileNamePattern>logs/mt-remote-client-%d{yyyy-MM-dd}.log.zip</fileNamePattern>
             <maxHistory>30</maxHistory>
             <totalSizeCap>100MB</totalSizeCap>
         </rollingPolicy>
@@ -25,7 +25,5 @@
         <appender-ref ref="STDOUT"/>
         <appender-ref ref="FILE"/>
     </root>
-
-    <log name="io.crossbar.autobahn.wamp" level="WARN"/>
 
 </configuration>

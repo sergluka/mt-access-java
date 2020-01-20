@@ -1,5 +1,6 @@
 package com.finplant.mt_remote_client;
 
+import java.io.InputStream;
 import java.net.URI;
 import java.time.Duration;
 
@@ -19,7 +20,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.annotation.NonNull;
 
-public class MtmClient implements AutoCloseable {
+public class MtRemoteClient implements AutoCloseable {
 
     private final Disposable.Composite disposables = Disposables.composite();
 
@@ -32,9 +33,12 @@ public class MtmClient implements AutoCloseable {
     private final DealingProcedures dealingProcedures;
 
     private final OrderProcedures orderProcedure;
+    private final URI uri;
 
-    public MtmClient() {
-        client = new RpcClient(new WsClient());
+    private MtRemoteClient(WsClient wsClient, URI uri) {
+        this.uri = uri;
+
+        client = new RpcClient(wsClient);
         configProcedures = new ConfigProcedures(client);
         protocolExtensionsProcedures = new ProtocolExtensionsProcedures(client);
         userProcedures = new UsersProcedures(client);
@@ -44,12 +48,22 @@ public class MtmClient implements AutoCloseable {
         dealingProcedures = new DealingProcedures(client);
     }
 
+    static public MtRemoteClient create(URI uri) {
+        return new MtRemoteClient(new WsClient(), uri);
+    }
+
+    static public MtRemoteClient createSecure(URI uri,
+                                              InputStream keystoreStream, String keystorePassword,
+                                              boolean hostnameVerification) {
+        return new MtRemoteClient(new WsClient(keystoreStream, keystorePassword, hostnameVerification), uri);
+    }
+
     @Override
     public void close() {
         disposables.dispose();
     }
 
-    public Mono<Void> connect(URI uri) {
+    public Mono<Void> connect() {
         return client.connect(uri);
     }
 
