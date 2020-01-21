@@ -1,4 +1,4 @@
-package com.finplant.mt_remote_client.dto;
+package com.finplant.mt_remote_client.dto.mt4;
 
 import java.math.BigDecimal;
 import java.util.Map;
@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class ConGroup {
+public class Mt4ConGroup {
 
     public enum OtpMode {
         DISABLED,
@@ -134,23 +134,23 @@ public class ConGroup {
     private Set<String> newsLanguages;
 
     @JsonProperty("securities")
-    private Map<String, ConGroupSecurity> securities;
+    private Map<String, Mt4ConGroupSecurity> securities;
 
     @JsonProperty("symbols")
-    private Map<String, ConGroupMargin> symbols;
+    private Map<String, Mt4ConGroupMargin> symbols;
 
     @Builder(toBuilder = true)
-    public ConGroup(String group, Boolean enable, Integer timeoutSeconds,
-                    OtpMode otpMode, String company, String signature, String supportPage, String smtpServer,
-                    String smtpLogin, String smtpPassword, String supportEmail, String templatesPath,
-                    Integer copies, Boolean reports, Integer defaultLeverage, BigDecimal defaultDeposit,
-                    Integer maxSymbols, String currency, BigDecimal credit, Integer marginCall,
-                    MarginMode marginMode, Integer marginStopout, BigDecimal interestRate, Boolean useSwap,
-                    NewsMode news, Set<Rights> rights, Boolean checkIePrices, Integer maxPositions,
-                    Boolean closeReopen, Boolean hedgeProhibited, Boolean closeFifo, Boolean hedgeLargeLeg,
-                    MarginType marginType, Integer archivePeriod, Integer archiveMaxBalance,
-                    Boolean stopoutSkipHedged, Boolean archivePendingPeriod, Set<String> newsLanguages,
-                    Map<String, ConGroupSecurity> securities, Map<String, ConGroupMargin> symbols) {
+    public Mt4ConGroup(String group, Boolean enable, Integer timeoutSeconds,
+                       OtpMode otpMode, String company, String signature, String supportPage, String smtpServer,
+                       String smtpLogin, String smtpPassword, String supportEmail, String templatesPath,
+                       Integer copies, Boolean reports, Integer defaultLeverage, BigDecimal defaultDeposit,
+                       Integer maxSymbols, String currency, BigDecimal credit, Integer marginCall,
+                       MarginMode marginMode, Integer marginStopout, BigDecimal interestRate, Boolean useSwap,
+                       NewsMode news, Set<Rights> rights, Boolean checkIePrices, Integer maxPositions,
+                       Boolean closeReopen, Boolean hedgeProhibited, Boolean closeFifo, Boolean hedgeLargeLeg,
+                       MarginType marginType, Integer archivePeriod, Integer archiveMaxBalance,
+                       Boolean stopoutSkipHedged, Boolean archivePendingPeriod, Set<String> newsLanguages,
+                       Map<String, Mt4ConGroupSecurity> securities, Map<String, Mt4ConGroupMargin> symbols) {
         this.group = group;
         this.enable = enable;
         this.timeoutSeconds = timeoutSeconds;

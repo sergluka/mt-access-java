@@ -1,4 +1,4 @@
-package com.finplant.mt_remote_client.dto;
+package com.finplant.mt_remote_client.dto.mt4;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
@@ -13,7 +13,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @Getter
-public class TradeRequest {
+public class Mt4TradeRequest {
 
     public enum Status {
         EMPTY("empty"),
@@ -63,5 +63,5 @@ public class TradeRequest {
     private List<BigDecimal> prices;
 
     @JsonProperty("trade")
-    private TradeTransaction trade;
+    private Mt4TradeTransaction trade;
 }

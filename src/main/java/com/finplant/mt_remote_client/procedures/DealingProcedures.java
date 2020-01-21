@@ -3,8 +3,9 @@ package com.finplant.mt_remote_client.procedures;
 import java.math.BigDecimal;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonValue;
 import com.finplant.mt_remote_client.RpcClient;
-import com.finplant.mt_remote_client.dto.TradeRequest;
+import com.finplant.mt_remote_client.dto.mt4.Mt4TradeRequest;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -12,9 +13,20 @@ import reactor.core.publisher.Mono;
 public class DealingProcedures {
 
     public enum ConfirmMode {
-        NORMAL,
-        ADD_PRICES,
-        PACKET
+        NORMAL("normal"),
+        ADD_PRICES("add_prices"),
+        PACKET("packet");
+
+        private final String value;
+
+        ConfirmMode(String value) {
+            this.value = value;
+        }
+
+        @JsonValue
+        public String getValue() {
+            return value;
+        }
     }
 
     private final RpcClient client;
@@ -25,7 +37,7 @@ public class DealingProcedures {
 
     public Mono<Void> confirm(int request_id, BigDecimal bid, BigDecimal ask, ConfirmMode mode) {
         return client.call("request.confirm",
-                           Map.of("request_id", request_id, "bid", bid, "ask", ask, "mode", mode.ordinal()));
+                           Map.of("request_id", request_id, "bid", bid, "ask", ask, "mode", mode));
     }
 
     public Mono<Void> requote(int request_id, BigDecimal bid, BigDecimal ask) {
@@ -40,7 +52,7 @@ public class DealingProcedures {
         return client.call("request.reset", Map.of("request_id", requestId));
     }
 
-    public Flux<TradeRequest> listen() {
-        return client.subscribe("trade_request", TradeRequest.class);
+    public Flux<Mt4TradeRequest> listen() {
+        return client.subscribe("trade_request", Mt4TradeRequest.class);
     }
 }

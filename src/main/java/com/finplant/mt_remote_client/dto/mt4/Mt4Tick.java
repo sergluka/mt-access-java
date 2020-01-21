@@ -1,4 +1,4 @@
-package com.finplant.mt_remote_client.dto;
+package com.finplant.mt_remote_client.dto.mt4;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -9,7 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 
 @Data
-public class Tick {
+public class Mt4Tick {
 
     private final String symbol;
     private final LocalDateTime time;
@@ -17,10 +17,10 @@ public class Tick {
     private final BigDecimal ask;
 
     @Builder(toBuilder = true)
-    public Tick(@JsonProperty("symbol") String symbol,
-                @JsonProperty("time") LocalDateTime time,
-                @JsonProperty("bid") BigDecimal bid,
-                @JsonProperty("ask") BigDecimal ask) {
+    public Mt4Tick(@JsonProperty("symbol") String symbol,
+                   @JsonProperty("time") LocalDateTime time,
+                   @JsonProperty("bid") BigDecimal bid,
+                   @JsonProperty("ask") BigDecimal ask) {
         this.symbol = symbol;
         this.time = time;
         this.bid = bid;

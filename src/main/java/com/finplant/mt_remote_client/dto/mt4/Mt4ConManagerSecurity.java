@@ -1,25 +1,27 @@
-package com.finplant.mt_remote_client.dto;
+package com.finplant.mt_remote_client.dto.mt4;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Data
 @NoArgsConstructor
-public class ConManagerSecurity {
+public class Mt4ConManagerSecurity {
 
     @JsonProperty("enable")
     private Boolean enable;
 
     @JsonProperty("minimum_lots")
-    private Integer minimumLots;
+    private BigDecimal minimumLots;
 
     @JsonProperty("maximum_lots")
-    private Integer maximumLots;
+    private BigDecimal maximumLots;
 
     @Builder(toBuilder = true)
-    public ConManagerSecurity(Boolean enable, Integer minimumLots, Integer maximumLots) {
+    public Mt4ConManagerSecurity(Boolean enable, BigDecimal minimumLots, BigDecimal maximumLots) {
         this.enable = enable;
         this.minimumLots = minimumLots;
         this.maximumLots = maximumLots;

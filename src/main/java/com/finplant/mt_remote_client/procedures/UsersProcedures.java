@@ -2,7 +2,7 @@ package com.finplant.mt_remote_client.procedures;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.finplant.mt_remote_client.RpcClient;
-import com.finplant.mt_remote_client.dto.UserRecord;
+import com.finplant.mt_remote_client.dto.mt4.Mt4UserRecord;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -17,24 +17,24 @@ public class UsersProcedures {
         this.client = client;
     }
 
-    public Mono<Integer> add(UserRecord user) {
+    public Mono<Integer> add(Mt4UserRecord user) {
         return client.call("user.add", user, Map.class).map(response -> (Integer) response.get("login"));
     }
 
-    public Mono<Void> set(UserRecord user) {
+    public Mono<Void> set(Mt4UserRecord user) {
         return client.call("user.set", user);
     }
 
-    public Flux<UserRecord> get(List<Integer> logins) {
-        return client.call("users.get", Map.of("logins", logins), new TypeReference<List<UserRecord>>() {})
+    public Flux<Mt4UserRecord> get(List<Integer> logins) {
+        return client.call("users.get", Map.of("logins", logins), new TypeReference<List<Mt4UserRecord>>() {})
                      .flatMapMany(Flux::fromIterable);
     }
 
-    public Flux<UserRecord> getAll() {
-        return client.call("users.get.all", new TypeReference<List<UserRecord>>() {}).flatMapMany(Flux::fromIterable);
+    public Flux<Mt4UserRecord> getAll() {
+        return client.call("users.get.all", new TypeReference<List<Mt4UserRecord>>() {}).flatMapMany(Flux::fromIterable);
     }
 
-    public Mono<UserRecord> get(Integer login) {
+    public Mono<Mt4UserRecord> get(Integer login) {
         return get(List.of(login)).single();
     }
 
@@ -46,7 +46,7 @@ public class UsersProcedures {
         return delete(List.of(login));
     }
 
-    public Flux<UserRecord> listen() {
-        return client.subscribe("user", UserRecord.class);
+    public Flux<Mt4UserRecord> listen() {
+        return client.subscribe("user", Mt4UserRecord.class);
     }
 }

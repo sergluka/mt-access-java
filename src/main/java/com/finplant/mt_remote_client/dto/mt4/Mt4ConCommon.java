@@ -1,4 +1,4 @@
-package com.finplant.mt_remote_client.dto;
+package com.finplant.mt_remote_client.dto.mt4;
 
 import java.net.URI;
 import java.time.LocalDateTime;
@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class ConCommon {
+public class Mt4ConCommon {
 
     public enum TypeOfDemo {
         DISABLED,
@@ -193,17 +193,17 @@ public class ConCommon {
     private URI accountUrl;
 
     @Builder(toBuilder = true)
-    public ConCommon(String owner, String name, String address, Integer port, Integer timeout, TypeOfDemo typeOfDemo,
-                     Integer timeOfDemoDays, Boolean daylightCorrection, ZoneOffset timezone, String timesyncServer,
-                     Integer feederTimeoutSeconds, Integer keepEmailsDays, Integer keepTicksDays,
-                     Boolean statementWeekend, Integer endOfDayHour, Integer endOfDayMinute,
-                     String optimizationTimeMinutes, Month overmonthLastMonth, Boolean antiflood,
-                     Integer antifloodMaxConnections, List<String> bindAdresses,
-                     List<String> webAdresses, StatementMode statementMode, LiveUpdateMode liveupdateMode,
-                     Integer lastActivateTime, Integer stopLastTime, MonthlyStateMode monthlyStateMode,
-                     RolloverChargingMode rolloversMode, String pathDatabase, String pathHistory, String pathLog,
-                     Integer overnightLastDay, Integer overnightLastTime, Integer overnightPrevTime,
-                     Integer stopDelaySeconds, StopReason stopReason, URI accountUrl) {
+    public Mt4ConCommon(String owner, String name, String address, Integer port, Integer timeout, TypeOfDemo typeOfDemo,
+                        Integer timeOfDemoDays, Boolean daylightCorrection, ZoneOffset timezone, String timesyncServer,
+                        Integer feederTimeoutSeconds, Integer keepEmailsDays, Integer keepTicksDays,
+                        Boolean statementWeekend, Integer endOfDayHour, Integer endOfDayMinute,
+                        String optimizationTimeMinutes, Month overmonthLastMonth, Boolean antiflood,
+                        Integer antifloodMaxConnections, List<String> bindAdresses,
+                        List<String> webAdresses, StatementMode statementMode, LiveUpdateMode liveupdateMode,
+                        Integer lastActivateTime, Integer stopLastTime, MonthlyStateMode monthlyStateMode,
+                        RolloverChargingMode rolloversMode, String pathDatabase, String pathHistory, String pathLog,
+                        Integer overnightLastDay, Integer overnightLastTime, Integer overnightPrevTime,
+                        Integer stopDelaySeconds, StopReason stopReason, URI accountUrl) {
         this.owner = owner;
         this.name = name;
         this.address = address;

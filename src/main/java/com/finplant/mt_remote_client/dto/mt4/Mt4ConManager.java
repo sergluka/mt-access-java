@@ -1,4 +1,4 @@
-package com.finplant.mt_remote_client.dto;
+package com.finplant.mt_remote_client.dto.mt4;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
@@ -10,7 +10,7 @@ import java.util.Map;
 
 @Data
 @NoArgsConstructor
-public class ConManager {
+public class Mt4ConManager {
 
     @JsonProperty("login")
     private Integer login;
@@ -94,15 +94,15 @@ public class ConManager {
     private Integer infoDepth;
 
     @JsonProperty("securities")
-    private Map<String, ConManagerSecurity> securities;
+    private Map<String, Mt4ConManagerSecurity> securities;
 
     @Builder(toBuilder = true)
-    public ConManager(Integer login, String name, Boolean manager, Boolean money, Boolean online, Boolean riskman,
-                      Boolean broker, Boolean admin, Boolean logs, Boolean reports, Boolean trades,
-                      Boolean marketWatch, Boolean email, Boolean userDetails, Boolean seeTrades, Boolean news,
-                      Boolean plugins, Boolean serverReports, Boolean techSupport, Boolean market,
-                      Boolean notifications, Boolean ipFilter, String ipFrom, String ipTo, String mailbox,
-                      List<String> groups, Integer infoDepth, Map<String, ConManagerSecurity> securities) {
+    public Mt4ConManager(Integer login, String name, Boolean manager, Boolean money, Boolean online, Boolean riskman,
+                         Boolean broker, Boolean admin, Boolean logs, Boolean reports, Boolean trades,
+                         Boolean marketWatch, Boolean email, Boolean userDetails, Boolean seeTrades, Boolean news,
+                         Boolean plugins, Boolean serverReports, Boolean techSupport, Boolean market,
+                         Boolean notifications, Boolean ipFilter, String ipFrom, String ipTo, String mailbox,
+                         List<String> groups, Integer infoDepth, Map<String, Mt4ConManagerSecurity> securities) {
         this.login = login;
         this.name = name;
         this.manager = manager;

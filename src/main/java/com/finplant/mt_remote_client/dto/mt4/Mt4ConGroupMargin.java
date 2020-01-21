@@ -1,4 +1,4 @@
-package com.finplant.mt_remote_client.dto;
+package com.finplant.mt_remote_client.dto.mt4;
 
 import java.math.BigDecimal;
 
@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class ConGroupMargin {
+public class Mt4ConGroupMargin {
 
     @JsonProperty("swap_long")
     private BigDecimal swapLong;
@@ -22,7 +22,7 @@ public class ConGroupMargin {
     private BigDecimal marginPct;
 
     @Builder(toBuilder = true)
-    public ConGroupMargin(BigDecimal swapLong, BigDecimal swapShort, BigDecimal marginPct) {
+    public Mt4ConGroupMargin(BigDecimal swapLong, BigDecimal swapShort, BigDecimal marginPct) {
         this.swapLong = swapLong;
         this.swapShort = swapShort;
         this.marginPct = marginPct;

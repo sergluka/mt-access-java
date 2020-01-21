@@ -1,6 +1,15 @@
 package com.finplant.mt_remote_client
 
-import com.finplant.mt_remote_client.dto.*
+
+import com.finplant.mt_remote_client.dto.mt4.Mt4ConManagerSecurity
+import com.finplant.mt_remote_client.dto.mt4.Mt4ConCommon
+import com.finplant.mt_remote_client.dto.mt4.Mt4ConGroup
+import com.finplant.mt_remote_client.dto.mt4.Mt4ConGroupMargin
+import com.finplant.mt_remote_client.dto.mt4.Mt4ConManager
+import com.finplant.mt_remote_client.dto.mt4.Mt4TradeRecord
+import com.finplant.mt_remote_client.dto.mt4.Mt4TradeRequest
+import com.finplant.mt_remote_client.dto.mt4.Mt4TradeTransaction
+import com.finplant.mt_remote_client.dto.mt4.Mt4UserRecord
 import com.finplant.mt_remote_client.procedures.DealingProcedures
 import com.finplant.mt_remote_client.procedures.OrderProcedures
 import reactor.core.publisher.Mono
@@ -18,7 +27,7 @@ import java.time.ZoneOffset
 
 import static org.assertj.core.api.Assertions.assertThat
 
-class MtmClientTest extends Specification {
+class MtRemoteClientTest extends Specification {
 
     public static final String URL = "ws://127.0.0.1:12344"
     public static final String MT_URL = "127.0.0.1"
@@ -27,10 +36,10 @@ class MtmClientTest extends Specification {
 
     @Shared
     @Subject
-    private MtmClient client = new MtmClient()
+    private MtRemoteClient client = new MtRemoteClient()
 
     def setupSpec() {
-        ReactorDebugAgent.init();
+        ReactorDebugAgent.init()
 
         client.connect(URI.create(URL)).block(Duration.ofSeconds(30))
         client.connectToMt(MT_URL, MT_LOGIN, MT_PASSWORD, Duration.ofSeconds(10)).block(Duration.ofSeconds(30))
@@ -53,7 +62,7 @@ class MtmClientTest extends Specification {
     }
 
     def addUser(def deposit = 1000000.0) {
-        def user = UserRecord.builder()
+        def user = Mt4UserRecord.builder()
                 .login(100)
                 .enable(true)
                 .group("miniforex")
@@ -75,7 +84,7 @@ class MtmClientTest extends Specification {
         if (deposit > 0.0) {
             def request = OrderProcedures.BalanceOrderParameters.builder()
                     .login(login)
-                    .command(TradeRecord.Command.BALANCE)
+                    .command(Mt4TradeRecord.Command.BALANCE)
                     .amount(1000000.0)
                     .comment("Initial deposit")
                     .build()
@@ -97,7 +106,7 @@ class MtmClientTest extends Specification {
         client.connectToMt(MT_URL, MT_LOGIN, MT_PASSWORD, Duration.ofSeconds(10)).block()
 
         then:
-        notThrown()
+        noExceptionThrown()
     }
 
     def "Second connection to MT should cause an error"() {
@@ -124,13 +133,13 @@ class MtmClientTest extends Specification {
 
     def "Validate common config"() {
         when:
-        def config1 = ConCommon.builder()
+        def config1 = Mt4ConCommon.builder()
                 .timeout(180)
                 .accountUrl(URI.create("https://127.0.0.1"))
                 .address(MT_URL)
                 .name("Demo")
                 .port(443)
-                .typeOfDemo(ConCommon.TypeOfDemo.PROLONG)
+                .typeOfDemo(Mt4ConCommon.TypeOfDemo.PROLONG)
                 .timeOfDemoDays(60)
                 .daylightCorrection(false)
                 .timezone(ZoneOffset.UTC)
@@ -146,17 +155,17 @@ class MtmClientTest extends Specification {
                 .antiflood(false)
                 .antifloodMaxConnections(10)
                 .webAdresses(List.of(MT_URL))
-                .statementMode(ConCommon.StatementMode.END_DAY)
-                .liveupdateMode(ConCommon.LiveUpdateMode.NO)
+                .statementMode(Mt4ConCommon.StatementMode.END_DAY)
+                .liveupdateMode(Mt4ConCommon.LiveUpdateMode.NO)
                 .lastActivateTime(10)
                 .stopLastTime(11)
-                .monthlyStateMode(ConCommon.MonthlyStateMode.END_MONTH)
-                .rolloversMode(ConCommon.RolloverChargingMode.ROLLOVER_NORMAL)
+                .monthlyStateMode(Mt4ConCommon.MonthlyStateMode.END_MONTH)
+                .rolloversMode(Mt4ConCommon.RolloverChargingMode.ROLLOVER_NORMAL)
                 .overnightLastDay(30)
                 .overnightLastTime(31)
                 .overnightPrevTime(32)
                 .stopDelaySeconds(60)
-                .stopReason(ConCommon.StopReason.SHUTDOWN)
+                .stopReason(Mt4ConCommon.StopReason.SHUTDOWN)
                 .build()
 
         client.config().common().set(config1).block(Duration.ofSeconds(10))
@@ -173,17 +182,16 @@ class MtmClientTest extends Specification {
         assertThat(config2.lostCommissionLogin).isPositive()
     }
 
-    def "Validate group config"() {
+    def "New group creation"() {
 
         given:
         client.config().groups().delete("test").onErrorResume { Mono.empty() }.block()
 
-        when:
-        def group1 = ConGroup.builder()
+        def group1 = Mt4ConGroup.builder()
                 .group("test")
                 .enable(true)
                 .timeoutSeconds(60)
-                .otpMode(ConGroup.OtpMode.DISABLED)
+                .otpMode(Mt4ConGroup.OtpMode.DISABLED)
                 .company("Company")
                 .signature("Signature")
                 .supportPage("localhost")
@@ -200,28 +208,31 @@ class MtmClientTest extends Specification {
                 .currency("EUR")
                 .credit(100.0)
                 .marginCall(0)
-                .marginMode(ConGroup.MarginMode.USE_ALL)
+                .marginMode(Mt4ConGroup.MarginMode.USE_ALL)
                 .marginStopout(0)
                 .interestRate(0.0)
                 .useSwap(true)
-                .news(ConGroup.NewsMode.TOPICS)
-                .rights(Set.of(ConGroup.Rights.EMAIL, ConGroup.Rights.TRAILING))
+                .news(Mt4ConGroup.NewsMode.TOPICS)
+                .rights(Set.of(Mt4ConGroup.Rights.EMAIL, Mt4ConGroup.Rights.TRAILING))
                 .checkIePrices(false)
                 .maxPositions(0)
                 .closeReopen(true)
                 .hedgeProhibited(true)
                 .closeFifo(true)
                 .hedgeLargeLeg(true)
-                .marginType(ConGroup.MarginType.CURRENCY)
+                .marginType(Mt4ConGroup.MarginType.CURRENCY)
                 .archivePeriod(90)
                 .archiveMaxBalance(10)
                 .stopoutSkipHedged(true)
                 .archivePendingPeriod(true)
                 .newsLanguages(Set.of("ru-RU", "en-EN"))
+                .symbols(Map.of("EURUSD", new Mt4ConGroupMargin(0.1, 0.2, 10.0)))
                 .build()
 
+        when:
         client.config().groups().add(group1).block(Duration.ofSeconds(10))
 
+        // New group is visible only after reconnect
         client.disconnect().block(Duration.ofSeconds(10))
         client.connect(URI.create(URL)).block(Duration.ofSeconds(10))
         client.connectToMt(MT_URL, MT_LOGIN, MT_PASSWORD, Duration.ofSeconds(10)).block()
@@ -229,7 +240,44 @@ class MtmClientTest extends Specification {
         def group2 = client.config().groups().get("test").block(Duration.ofSeconds(10))
 
         then:
+        assertThat(group2.symbols["EURUSD"]).isEqualToComparingFieldByField(group1.symbols["EURUSD"])
+
+        and:
+        when:
+        group1.symbols = null
+
+        then:
         assertThat(group2).isEqualToIgnoringNullFields(group1)
+    }
+
+    def "Existing group update"() {
+
+        given:
+        client.config().groups().delete("test").onErrorResume { Mono.empty() }.block()
+
+        def group = Mt4ConGroup.builder()
+                .group("test")
+                .enable(true)
+                .build()
+
+        def groupDisabled = Mt4ConGroup.builder()
+                .group("test")
+                .enable(false)
+                .build()
+
+        client.config().groups().add(group).block(Duration.ofSeconds(10))
+
+        client.disconnect().block(Duration.ofSeconds(10))
+        client.connect(URI.create(URL)).block(Duration.ofSeconds(10))
+        client.connectToMt(MT_URL, MT_LOGIN, MT_PASSWORD, Duration.ofSeconds(10)).block()
+
+        when:
+        client.config().groups().set(groupDisabled).block(Duration.ofSeconds(10))
+        sleep(1000)
+        def group1 = client.config().groups().get("test").block(Duration.ofSeconds(10))
+
+        then:
+        !group1.enable
     }
 
     def "Subscribe to groups"() {
@@ -237,7 +285,7 @@ class MtmClientTest extends Specification {
         given:
         client.config().groups().delete("test").onErrorResume { Mono.empty() }.block()
 
-        def group1 = ConGroup.builder()
+        def group1 = Mt4ConGroup.builder()
                 .group("test")
                 .build()
 
@@ -249,10 +297,10 @@ class MtmClientTest extends Specification {
                 .verify()
     }
 
-    def "Validate user record"() {
+    def "Create new user"() {
 
         given:
-        def user1 = UserRecord.builder()
+        def user1 = Mt4UserRecord.builder()
                 .login(100)
                 .enable(true)
                 .group("miniforex")
@@ -278,7 +326,7 @@ class MtmClientTest extends Specification {
                 .sendReports(false)
                 .mqid(123456)
                 .userColor(0xFF00FF)
-                .apiData((0..15) as byte[])
+                .apiData(new byte[0])
                 .password("Pass1")
                 .passwordInvestor("Pass2")
                 .build()
@@ -311,9 +359,37 @@ class MtmClientTest extends Specification {
         assertThat(user2.credit).isEqualTo(0.0)
     }
 
+    def "Update existing user"() {
+
+        given:
+        def user1 = Mt4UserRecord.builder()
+                .login(100)
+                .group("miniforex")
+                .enableChangePassword(true)
+                .readOnly(false)
+                .enableOtp(false)
+                .name("Johans Smits")
+                .password("Pass1")
+                .build()
+
+        def user2 = Mt4UserRecord.builder()
+                .login(100)
+                .readOnly(true)
+                .build()
+
+        client.users().add(user1).timeout(Duration.ofSeconds(3)).block()
+
+        when:
+        client.users().set(user2).timeout(Duration.ofSeconds(3)).block()
+        def user3 = client.users().get(100).timeout(Duration.ofSeconds(30)).block()
+
+        then:
+        user3.readOnly
+    }
+
     def "Get event at user creation"() {
         given:
-        def user1 = UserRecord.builder()
+        def user1 = Mt4UserRecord.builder()
                 .login(101)
                 .enable(true)
                 .group("miniforex")
@@ -357,18 +433,18 @@ class MtmClientTest extends Specification {
         given:
         client.config().managers().delete(123).onErrorResume { Mono.empty() }.block()
 
-        def forexSecurity = ConManagerSecurity.builder()
+        def forexSecurity = Mt4ConManagerSecurity.builder()
                 .enable(true)
-                .maximumLots(100)
-                .minimumLots(2)
+                .maximumLots(100.0)
+                .minimumLots(2.0)
                 .build()
-        def cfdSecurity = ConManagerSecurity.builder()
+        def cfdSecurity = Mt4ConManagerSecurity.builder()
                 .enable(false)
-                .maximumLots(0)
-                .minimumLots(0)
+                .maximumLots(0.0)
+                .minimumLots(0.0)
                 .build()
 
-        def manager1 = ConManager.builder()
+        def manager1 = Mt4ConManager.builder()
                 .login(123)
                 .name("Manager1")
                 .manager(true)
@@ -412,11 +488,11 @@ class MtmClientTest extends Specification {
     def "Get last prices for EURUSD"() {
 
         given:
-        client.symbols().showSymbol("EURUSD").block()
+        client.symbols().show("EURUSD").block()
 
         expect:
         sleep(1000)
-        StepVerifier.create(client.market().ticksGet("EURUSD"))
+        StepVerifier.create(client.market().get("EURUSD"))
                 .assertNext {
                     assert it.time != null
                     assert it.ask > 0.0
@@ -425,22 +501,23 @@ class MtmClientTest extends Specification {
                 .verifyComplete()
 
         cleanup:
-        client.symbols().hideSymbol("EURUSD").block()
+        client.symbols().hide("EURUSD").block()
     }
 
+    // TODO: Fix symbol.add for subscription
     def "Subscribe to EURUSD tick"() {
 
         given:
-        client.symbols().showSymbol("EURUSD").block()
+        client.symbols().show("EURUSD").block()
 
         sleep(1000)
-        def tick = client.market().ticksGet("EURUSD").blockFirst()
+        def tick = client.market().get("EURUSD").blockFirst()
         def newBid = tick.bid + 0.0001
         def newAsk = tick.ask + 0.0001
 
         expect:
-        StepVerifier.create(client.symbols().listen())
-                .then { client.symbols().addTick("EURUSD", newBid, newAsk).block() }
+        StepVerifier.create(client.market().listen())
+                .then { client.market().add("EURUSD", newBid, newAsk).block() }
                 .assertNext {
                     assert it.time != null
                     assert it.bid == newBid
@@ -450,7 +527,7 @@ class MtmClientTest extends Specification {
                 .verify()
 
         cleanup:
-        client.symbols().hideSymbol("EURUSD").block()
+        client.symbols().hide("EURUSD").block()
     }
 
     // TODO: prepare users, symbols and etc before tests.
@@ -462,7 +539,7 @@ class MtmClientTest extends Specification {
         def openParams = OrderProcedures.OpenOrderParameters.builder()
                 .login(login)
                 .symbol("EURUSD")
-                .command(TradeRecord.Command.BUY)
+                .command(Mt4TradeRecord.Command.BUY)
                 .volume(0.01)
                 .price(2.0)
                 .build()
@@ -477,7 +554,7 @@ class MtmClientTest extends Specification {
         trade.order == order
         trade.login == login
         trade.symbol == "EURUSD"
-        trade.command == TradeRecord.Command.BUY
+        trade.command == Mt4TradeRecord.Command.BUY
         trade.volume == 0.01
         trade.openPrice == 2.0
         trade.openTime != null
@@ -492,9 +569,9 @@ class MtmClientTest extends Specification {
         def openParams = OrderProcedures.OpenOrderParameters.builder()
                 .login(login)
                 .symbol("EURUSD")
-                .command(TradeRecord.Command.BUY_STOP)
+                .command(Mt4TradeRecord.Command.BUY_STOP)
                 .volume(0.01)
-                .price(2.0)
+                .price(2.2)
                 .build()
 
         def modifyParams = OrderProcedures.ModifyOrderParameters.builder()
@@ -530,7 +607,7 @@ class MtmClientTest extends Specification {
         def openParams = OrderProcedures.OpenOrderParameters.builder()
                 .login(login)
                 .symbol("EURUSD")
-                .command(TradeRecord.Command.SELL)
+                .command(Mt4TradeRecord.Command.SELL)
                 .volume(0.02)
                 .price(2.0)
                 .build()
@@ -541,7 +618,9 @@ class MtmClientTest extends Specification {
         client.orders().close(order, 2.0, 0.02).block()
 
         then:
-        def trade = client.orders().getHistory(login, null, null).blockLast()
+        def trade = client.orders().getHistory(login,
+                                               LocalDateTime.of(2020, 1, 1, 0, 0, 0),
+                                               LocalDateTime.of(2030, 1, 1, 0, 0, 0)).blockLast()
 
         trade.order == order
         trade.profit == 0.0
@@ -556,15 +635,15 @@ class MtmClientTest extends Specification {
         def openParams = OrderProcedures.OpenOrderParameters.builder()
                 .login(login)
                 .symbol("EURUSD")
-                .command(TradeRecord.Command.SELL_LIMIT)
+                .command(Mt4TradeRecord.Command.SELL_LIMIT)
                 .volume(0.02)
-                .price(2.0)
+                .price(2.2)
                 .build()
 
         def order = client.orders().open(openParams).block()
 
         when:
-        client.orders().delete(order, TradeRecord.Command.SELL_LIMIT).block()
+        client.orders().cancel(order, Mt4TradeRecord.Command.SELL_LIMIT).block()
 
         then:
         def trade = client.orders().getHistory(login, null, null).blockLast()
@@ -583,9 +662,9 @@ class MtmClientTest extends Specification {
         def openParams = OrderProcedures.OpenOrderParameters.builder()
                 .login(login)
                 .symbol("EURUSD")
-                .command(TradeRecord.Command.SELL_LIMIT)
+                .command(Mt4TradeRecord.Command.SELL_LIMIT)
                 .volume(0.02)
-                .price(2.0)
+                .price(2.2)
                 .build()
 
         def order = client.orders().open(openParams).block()
@@ -597,7 +676,7 @@ class MtmClientTest extends Specification {
         sleep(1000)
         def trade = client.orders().get(order).block()
 
-        trade.command == TradeRecord.Command.SELL;
+        trade.command == Mt4TradeRecord.Command.SELL
         trade.openPrice == 10.0
     }
 
@@ -607,7 +686,7 @@ class MtmClientTest extends Specification {
         def login = addUser(0.0)
         def balance = OrderProcedures.BalanceOrderParameters.builder()
                 .login(login)
-                .command(TradeRecord.Command.BALANCE)
+                .command(Mt4TradeRecord.Command.BALANCE)
                 .amount(111.11)
                 .build()
 
@@ -625,7 +704,7 @@ class MtmClientTest extends Specification {
         def login = addUser(0.0)
         def balance = OrderProcedures.BalanceOrderParameters.builder()
                 .login(login)
-                .command(TradeRecord.Command.CREDIT)
+                .command(Mt4TradeRecord.Command.CREDIT)
                 .expiration(LocalDateTime.of(2030, 1, 1, 12, 0, 0))
                 .amount(111.11)
                 .build()
@@ -647,14 +726,14 @@ class MtmClientTest extends Specification {
         def openParams1 = OrderProcedures.OpenOrderParameters.builder()
                 .login(login)
                 .symbol("EURUSD")
-                .command(TradeRecord.Command.BUY)
+                .command(Mt4TradeRecord.Command.BUY)
                 .volume(0.02)
                 .price(2.0)
                 .build()
         def openParams2 = OrderProcedures.OpenOrderParameters.builder()
                 .login(login)
                 .symbol("EURUSD")
-                .command(TradeRecord.Command.SELL)
+                .command(Mt4TradeRecord.Command.SELL)
                 .volume(0.05)
                 .price(2.0)
                 .build()
@@ -671,13 +750,13 @@ class MtmClientTest extends Specification {
         closedTrades[0].with {
             assert it.order == order1
             assert it.volume == 0.02
-            assert it.command == TradeRecord.Command.BUY
+            assert it.command == Mt4TradeRecord.Command.BUY
             assert it.comment == "partial close"
         }
         closedTrades[1].with {
             assert it.order == order2
             assert it.volume == 0.00
-            assert it.command == TradeRecord.Command.SELL
+            assert it.command == Mt4TradeRecord.Command.SELL
             assert it.comment == "close hedge by #${order1}"
         }
 
@@ -685,7 +764,7 @@ class MtmClientTest extends Specification {
 
         trade2.order == order2 + 1
         trade2.volume == 0.03
-        trade2.command == TradeRecord.Command.SELL
+        trade2.command == Mt4TradeRecord.Command.SELL
         trade2.comment == "from #${order1}"
     }
 
@@ -697,21 +776,21 @@ class MtmClientTest extends Specification {
         def openParams1 = OrderProcedures.OpenOrderParameters.builder()
                 .login(login)
                 .symbol("EURUSD")
-                .command(TradeRecord.Command.BUY)
+                .command(Mt4TradeRecord.Command.BUY)
                 .volume(0.07)
                 .price(2.0)
                 .build()
         def openParams2 = OrderProcedures.OpenOrderParameters.builder()
                 .login(login)
                 .symbol("EURUSD")
-                .command(TradeRecord.Command.SELL)
+                .command(Mt4TradeRecord.Command.SELL)
                 .volume(0.05)
                 .price(2.0)
                 .build()
         def openParams3 = OrderProcedures.OpenOrderParameters.builder()
                 .login(login)
                 .symbol("EURUSD")
-                .command(TradeRecord.Command.SELL)
+                .command(Mt4TradeRecord.Command.SELL)
                 .volume(0.10)
                 .price(2.0)
                 .build()
@@ -733,19 +812,19 @@ class MtmClientTest extends Specification {
         closedTrades[0].with {
             assert it.order == order2
             assert it.volume == 0.00
-            assert it.command == TradeRecord.Command.SELL
+            assert it.command == Mt4TradeRecord.Command.SELL
             assert it.comment == "close hedge by #${order1}"
         }
         closedTrades[1].with {
             assert it.order == order3
             assert it.volume == 0.02
-            assert it.command == TradeRecord.Command.SELL
+            assert it.command == Mt4TradeRecord.Command.SELL
             assert it.comment == "partial close"
         }
         closedTrades[2].with {
             assert it.order == order3 + 1
             assert it.volume == 0.00
-            assert it.command == TradeRecord.Command.BUY
+            assert it.command == Mt4TradeRecord.Command.BUY
             assert it.comment == "close hedge by #${order3}"
         }
 
@@ -755,7 +834,7 @@ class MtmClientTest extends Specification {
         openedTrades[0].with {
             assert it.order == order3 + 2
             assert it.volume == 0.08
-            assert it.command == TradeRecord.Command.SELL
+            assert it.command == Mt4TradeRecord.Command.SELL
             assert it.comment == "partial close"
         }
     }
@@ -768,7 +847,7 @@ class MtmClientTest extends Specification {
         def openParams = OrderProcedures.OpenOrderParameters.builder()
                 .login(login)
                 .symbol("EURUSD")
-                .command(TradeRecord.Command.SELL)
+                .command(Mt4TradeRecord.Command.SELL)
                 .volume(0.02)
                 .price(2.0)
                 .build()
@@ -792,7 +871,7 @@ class MtmClientTest extends Specification {
         def openParams = OrderProcedures.OpenOrderParameters.builder()
                 .login(login)
                 .symbol("EURUSD")
-                .command(TradeRecord.Command.SELL)
+                .command(Mt4TradeRecord.Command.SELL)
                 .volume(0.02)
                 .price(2.0)
                 .build()
@@ -819,7 +898,7 @@ class MtmClientTest extends Specification {
         def openParams = OrderProcedures.OpenOrderParameters.builder()
                 .login(login)
                 .symbol("EURUSD")
-                .command(TradeRecord.Command.SELL)
+                .command(Mt4TradeRecord.Command.SELL)
                 .volume(0.02)
                 .price(2.0)
                 .build()
@@ -870,7 +949,7 @@ class MtmClientTest extends Specification {
         given:
         def login = addUser()
 
-        TradeRequest request
+        Mt4TradeRequest request
 
         expect:
         StepVerifier.create(client.dealing().listen())
@@ -880,7 +959,7 @@ class MtmClientTest extends Specification {
                     assert it.manager == 1
                     assert it.balance > 0.0
                     assert it.trade.order == 0
-                    assert it.trade.type == TradeTransaction.Type.ORDER_MK_OPEN
+                    assert it.trade.type == Mt4TradeTransaction.Type.ORDER_MK_OPEN
 
                     request = it
                 }
@@ -903,7 +982,7 @@ class MtmClientTest extends Specification {
         given:
         def login = addUser()
 
-        TradeRequest request
+        Mt4TradeRequest request
 
         expect:
         StepVerifier.create(client.dealing().listen())
@@ -913,7 +992,7 @@ class MtmClientTest extends Specification {
                     assert it.manager == 1
                     assert it.balance > 0.0
                     assert it.trade.order == 0
-                    assert it.trade.type == TradeTransaction.Type.ORDER_IE_OPEN
+                    assert it.trade.type == Mt4TradeTransaction.Type.ORDER_MK_OPEN
 
                     request = it
                 }
@@ -925,16 +1004,16 @@ class MtmClientTest extends Specification {
         client.dealing().reject(request.id).block()
 
         then:
-        notThrown()
+        noExceptionThrown()
     }
 
-    @Ignore("Works only with manual trading via Terminal and symbol with Instant execution")
-    def "Start dealing and requote requests for IE execution"() {
+    @Ignore("Works only with manual trading via Terminal")
+    def "Start dealing and reset requests"() {
 
         given:
         def login = addUser()
 
-        TradeRequest request
+        Mt4TradeRequest request
 
         expect:
         StepVerifier.create(client.dealing().listen())
@@ -944,7 +1023,38 @@ class MtmClientTest extends Specification {
                     assert it.manager == 1
                     assert it.balance > 0.0
                     assert it.trade.order == 0
-                    assert it.trade.type == TradeTransaction.Type.ORDER_IE_OPEN
+                    assert it.trade.type == Mt4TradeTransaction.Type.ORDER_MK_OPEN
+
+                    request = it
+                }
+                .thenCancel()
+                .verify(Duration.ofMinutes(10))
+
+        and:
+        when:
+        client.dealing().reset(request.id).block()
+
+        then:
+        noExceptionThrown()
+    }
+
+//    @Ignore("Works only with manual trading via Terminal and symbol with Instant execution")
+    def "Start dealing and requote requests for IE execution"() {
+
+        given:
+        def login = addUser()
+
+        Mt4TradeRequest request
+
+        expect:
+        StepVerifier.create(client.dealing().listen())
+                .assertNext {
+                    assert it.id > 0
+                    assert it.login == login
+                    assert it.manager == 1
+                    assert it.balance > 0.0
+                    assert it.trade.order == 0
+                    assert it.trade.type == Mt4TradeTransaction.Type.ORDER_IE_OPEN
 
                     request = it
                 }
@@ -956,6 +1066,6 @@ class MtmClientTest extends Specification {
         client.dealing().requote(request.id, 1.0, 1.1).block()
 
         then:
-        notThrown()
+        noExceptionThrown()
     }
 }

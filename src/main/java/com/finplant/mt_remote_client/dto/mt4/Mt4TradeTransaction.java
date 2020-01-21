@@ -1,6 +1,5 @@
-package com.finplant.mt_remote_client.dto;
+package com.finplant.mt_remote_client.dto.mt4;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.Data;
@@ -13,48 +12,34 @@ import java.time.LocalDateTime;
 @Data
 @Getter
 @NoArgsConstructor
-public class TradeTransaction {
+public class Mt4TradeTransaction {
 
     public enum Type {
-        PRICES_GET(0),
-        PRICES_REQUOTE(1),
-        ORDER_IE_OPEN(64),
-        ORDER_REQ_OPEN(65),
-        ORDER_MK_OPEN(66),
-        ORDER_PENDING_OPEN(67),
+        PRICES_GET("prices_get"),
+        PRICES_REQUOTE("prices_requote"),
+        ORDER_IE_OPEN("order_ie_open"),
+        ORDER_REQ_OPEN("order_req_open"),
+        ORDER_MK_OPEN("order_mk_open"),
+        ORDER_PENDING_OPEN("order_pending_open"),
 
-        ORDER_IE_CLOSE(68),
-        ORDER_REQ_CLOSE(69),
-        ORDER_MK_CLOSE(70),
+        ORDER_IE_CLOSE("order_ie_close"),
+        ORDER_REQ_CLOSE("order_req_close"),
+        ORDER_MK_CLOSE("order_mk_close"),
 
-        ORDER_MODIFY(71),
-        ORDER_DELETE(72),
-        ORDER_CLOSE_BY(73),
-        ORDER_CLOSE_ALL(74);
+        ORDER_MODIFY("order_modify"),
+        ORDER_DELETE("order_delete"),
+        ORDER_CLOSE_BY("order_close_by"),
+        ORDER_CLOSE_ALL("order_close_all");
 
-        private final int value;
+        private final String value;
 
-        Type(int value) {
+        Type(String value) {
             this.value = value;
         }
 
         @JsonValue
-        public int getValue() {
+        public String getValue() {
             return value;
-        }
-
-        public static Type forCode(int code) {
-            for (Type element : values()) {
-                if (element.value == code) {
-                    return element;
-                }
-            }
-            throw new IllegalArgumentException(String.format(String.format("Unknown type: %d", code)));
-        }
-
-        @JsonCreator
-        public static Type forValue(String v) {
-            return Type.forCode(Integer.parseInt(v));
         }
     }
 
@@ -62,7 +47,7 @@ public class TradeTransaction {
     private Type type;
 
     @JsonProperty("cmd")
-    private TradeRecord.Command command;
+    private Mt4TradeRecord.Command command;
 
     @JsonProperty("order")
     private Integer order;

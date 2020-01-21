@@ -1,4 +1,4 @@
-package com.finplant.mt_remote_client.dto;
+package com.finplant.mt_remote_client.dto.mt4;
 
 import java.math.BigDecimal;
 import java.util.Set;
@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class ConGroupSecurity {
+public class Mt4ConGroupSecurity {
 
     public enum ExecutionMode {
         MANUAL,
@@ -120,17 +120,17 @@ public class ConGroupSecurity {
     private FreeMarginMode freeMarginMode;
 
     @Builder(toBuilder = true)
-    public ConGroupSecurity(Boolean show, Boolean trade,
-                            ExecutionMode executionMode, BigDecimal commissionBase,
-                            CommissionUnits commissionType,
-                            CommissionCalculationMode commissionLotsMode, BigDecimal commissionAgent,
-                            CommissionUnits commissionAgentType, Integer spreadDiff, BigDecimal lotMin,
-                            BigDecimal lotMax, BigDecimal lotStep, Integer ieDeviation,
-                            Boolean requestConfirmation,
-                            Set<TradeRight> tradeRights, Boolean ieQuickMode,
-                            AutoCloseoutMode autoCloseoutMode, BigDecimal commissionTax,
-                            CommissionCalculationMode commissionAgentMode,
-                            FreeMarginMode freeMarginMode) {
+    public Mt4ConGroupSecurity(Boolean show, Boolean trade,
+                               ExecutionMode executionMode, BigDecimal commissionBase,
+                               CommissionUnits commissionType,
+                               CommissionCalculationMode commissionLotsMode, BigDecimal commissionAgent,
+                               CommissionUnits commissionAgentType, Integer spreadDiff, BigDecimal lotMin,
+                               BigDecimal lotMax, BigDecimal lotStep, Integer ieDeviation,
+                               Boolean requestConfirmation,
+                               Set<TradeRight> tradeRights, Boolean ieQuickMode,
+                               AutoCloseoutMode autoCloseoutMode, BigDecimal commissionTax,
+                               CommissionCalculationMode commissionAgentMode,
+                               FreeMarginMode freeMarginMode) {
         this.show = show;
         this.trade = trade;
         this.executionMode = executionMode;

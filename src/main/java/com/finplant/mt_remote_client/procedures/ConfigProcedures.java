@@ -3,9 +3,9 @@ package com.finplant.mt_remote_client.procedures;
 import java.util.Map;
 
 import com.finplant.mt_remote_client.RpcClient;
-import com.finplant.mt_remote_client.dto.ConCommon;
-import com.finplant.mt_remote_client.dto.ConGroup;
-import com.finplant.mt_remote_client.dto.ConManager;
+import com.finplant.mt_remote_client.dto.mt4.Mt4ConCommon;
+import com.finplant.mt_remote_client.dto.mt4.Mt4ConGroup;
+import com.finplant.mt_remote_client.dto.mt4.Mt4ConManager;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -41,11 +41,11 @@ public class ConfigProcedures {
             this.client = client;
         }
 
-        public Mono<ConCommon> get() {
-            return client.call("config.common.get", ConCommon.class);
+        public Mono<Mt4ConCommon> get() {
+            return client.call("config.common.get", Mt4ConCommon.class);
         }
 
-        public Mono<Void> set(ConCommon common) {
+        public Mono<Void> set(Mt4ConCommon common) {
             return client.call("config.common.set", common);
         }
     }
@@ -57,15 +57,15 @@ public class ConfigProcedures {
             this.client = client;
         }
 
-        public Mono<Void> add(ConGroup group) {
+        public Mono<Void> add(Mt4ConGroup group) {
             return client.call("config.group.add", group);
         }
 
-        public Mono<ConGroup> get(String group) {
-            return client.call("config.group.get", Map.of("group", group), ConGroup.class);
+        public Mono<Mt4ConGroup> get(String group) {
+            return client.call("config.group.get", Map.of("group", group), Mt4ConGroup.class);
         }
 
-        public Mono<Void> set(ConGroup group) {
+        public Mono<Void> set(Mt4ConGroup group) {
             return client.call("config.group.set", group);
         }
 
@@ -73,8 +73,8 @@ public class ConfigProcedures {
             return client.call("config.group.del", Map.of("group", group));
         }
 
-        public Flux<ConGroup> listen() {
-            return client.subscribe("group", ConGroup.class);
+        public Flux<Mt4ConGroup> listen() {
+            return client.subscribe("group", Mt4ConGroup.class);
         }
     }
 
@@ -85,12 +85,12 @@ public class ConfigProcedures {
             this.client = client;
         }
 
-        public Mono<Void> add(ConManager manager) {
+        public Mono<Void> add(Mt4ConManager manager) {
             return client.call("config.manager.set", manager);
         }
 
-        public Mono<ConManager> get(Integer login) {
-            return client.call("config.manager.get", Map.of("login", login), ConManager.class);
+        public Mono<Mt4ConManager> get(Integer login) {
+            return client.call("config.manager.get", Map.of("login", login), Mt4ConManager.class);
         }
 
         public Mono<Void> delete(Integer login) {

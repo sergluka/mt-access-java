@@ -19,7 +19,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.annotation.NonNull;
 
-public class MtmClient implements AutoCloseable {
+public class MtRemoteClient implements AutoCloseable {
 
     private final Disposable.Composite disposables = Disposables.composite();
 
@@ -33,7 +33,7 @@ public class MtmClient implements AutoCloseable {
 
     private final OrderProcedures orderProcedure;
 
-    public MtmClient() {
+    public MtRemoteClient() {
         client = new RpcClient(new WsClient());
         configProcedures = new ConfigProcedures(client);
         protocolExtensionsProcedures = new ProtocolExtensionsProcedures(client);

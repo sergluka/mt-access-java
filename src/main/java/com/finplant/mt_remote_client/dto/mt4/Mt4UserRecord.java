@@ -1,4 +1,4 @@
-package com.finplant.mt_remote_client.dto;
+package com.finplant.mt_remote_client.dto.mt4;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
-public class UserRecord {
+public class Mt4UserRecord {
 
     @JsonProperty("login")
     Integer login;
@@ -105,12 +105,12 @@ public class UserRecord {
     BigDecimal credit;
 
     @Builder(toBuilder = true)
-    public UserRecord(Integer login, String group, Boolean enable, Boolean enableChangePassword, Boolean readOnly,
-                      Boolean enableOtp, String passwordPhone, String name, String country, String city,
-                      String state, String zipcode, String address, String leadSource, String phone, String email,
-                      String comment, String id, String status, Integer leverage, Integer agentAccount,
-                      BigDecimal taxes, Boolean sendReports, Integer mqid,
-                      Long userColor, byte[] apiData, String password, String passwordInvestor) {
+    public Mt4UserRecord(Integer login, String group, Boolean enable, Boolean enableChangePassword, Boolean readOnly,
+                         Boolean enableOtp, String passwordPhone, String name, String country, String city,
+                         String state, String zipcode, String address, String leadSource, String phone, String email,
+                         String comment, String id, String status, Integer leverage, Integer agentAccount,
+                         BigDecimal taxes, Boolean sendReports, Integer mqid,
+                         Long userColor, byte[] apiData, String password, String passwordInvestor) {
         this.login = login;
         this.group = group;
         this.enable = enable;

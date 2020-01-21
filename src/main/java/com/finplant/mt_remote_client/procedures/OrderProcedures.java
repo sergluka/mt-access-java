@@ -3,7 +3,7 @@ package com.finplant.mt_remote_client.procedures;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.finplant.mt_remote_client.RpcClient;
-import com.finplant.mt_remote_client.dto.TradeRecord;
+import com.finplant.mt_remote_client.dto.mt4.Mt4TradeRecord;
 
 import lombok.Builder;
 import lombok.Data;
@@ -46,8 +46,8 @@ public class OrderProcedures {
         return client.call("order.close_all", Map.of("login", login, "symbol", symbol));
     }
 
-    public Mono<Void> delete(int order, TradeRecord.Command command) {
-        return client.call("order.delete", Map.of("order", order, "command", command));
+    public Mono<Void> cancel(int order, Mt4TradeRecord.Command command) {
+        return client.call("order.cancel", Map.of("order", order, "command", command));
     }
 
     public Mono<Void> activate(int order, BigDecimal price) {
@@ -58,22 +58,22 @@ public class OrderProcedures {
         return client.call("order.balance", parameters, Map.class).map(response -> (Integer) response.get("order"));
     }
 
-    public Mono<TradeRecord> get(int order) {
-        return client.call("trade.get", Map.of("order", order), TradeRecord.class);
+    public Mono<Mt4TradeRecord> get(int order) {
+        return client.call("trade.get", Map.of("order", order), Mt4TradeRecord.class);
     }
 
-    public Flux<TradeRecord> getAll() {
-        return client.call("trades.get", new TypeReference<List<TradeRecord>>() {}).flatMapMany(Flux::fromIterable);
+    public Flux<Mt4TradeRecord> getAll() {
+        return client.call("trades.get", new TypeReference<List<Mt4TradeRecord>>() {}).flatMapMany(Flux::fromIterable);
     }
 
-    public Flux<TradeRecord> getByLogin(int login, String group) {
+    public Flux<Mt4TradeRecord> getByLogin(int login, String group) {
         return client.call("trades.get.by_login",
                            Map.of("login", login, "group", group),
-                           new TypeReference<List<TradeRecord>>() {})
+                           new TypeReference<List<Mt4TradeRecord>>() {})
                      .flatMapMany(Flux::fromIterable);
     }
 
-    public Flux<TradeRecord> getHistory(int login, LocalDateTime from, LocalDateTime to) {
+    public Flux<Mt4TradeRecord> getHistory(int login, LocalDateTime from, LocalDateTime to) {
 
         var params = new HashMap<>();
         params.put("login", (long) login);
@@ -84,12 +84,12 @@ public class OrderProcedures {
             params.put("to", to.toEpochSecond(ZoneOffset.UTC));
         }
 
-        return client.call("trades.history", params, new TypeReference<List<TradeRecord>>() {})
+        return client.call("trades.history", params, new TypeReference<List<Mt4TradeRecord>>() {})
                      .flatMapMany(Flux::fromIterable);
     }
 
-    public Flux<TradeRecord> listen() {
-        return client.subscribe("trade", TradeRecord.class);
+    public Flux<Mt4TradeRecord> listen() {
+        return client.subscribe("trade", Mt4TradeRecord.class);
     }
 
     @Data
@@ -101,7 +101,7 @@ public class OrderProcedures {
         @JsonProperty("symbol")
         private final String symbol;
         @JsonProperty("command")
-        private final TradeRecord.Command command; // TODO: deny balance and credit
+        private final Mt4TradeRecord.Command command;
         @JsonProperty("volume")
         private final BigDecimal volume;
         @JsonProperty("price")
@@ -142,7 +142,7 @@ public class OrderProcedures {
         @JsonProperty("login")
         private final Integer login;
         @JsonProperty("command")
-        private final TradeRecord.Command command;
+        private final Mt4TradeRecord.Command command;
         @JsonProperty("amount")
         private final BigDecimal amount;
 
