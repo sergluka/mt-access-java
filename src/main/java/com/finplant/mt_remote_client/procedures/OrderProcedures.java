@@ -1,5 +1,12 @@
 package com.finplant.mt_remote_client.procedures;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.finplant.mt_remote_client.RpcClient;
@@ -8,15 +15,9 @@ import com.finplant.mt_remote_client.dto.mt4.Mt4TradeRecord;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
+import lombok.val;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class OrderProcedures {
 
@@ -75,7 +76,7 @@ public class OrderProcedures {
 
     public Flux<Mt4TradeRecord> getHistory(int login, LocalDateTime from, LocalDateTime to) {
 
-        var params = new HashMap<>();
+        val params = new HashMap<String, Long>();
         params.put("login", (long) login);
         if (from != null) {
             params.put("from", from.toEpochSecond(ZoneOffset.UTC));

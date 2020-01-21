@@ -29,19 +29,22 @@ import static org.assertj.core.api.Assertions.assertThat
 
 class MtRemoteClientTest extends Specification {
 
-    public static final String URL = "ws://127.0.0.1:12344"
-    public static final String MT_URL = "127.0.0.1"
-    public static final int MT_LOGIN = 1
-    public static final String MT_PASSWORD = "manager"
+    private static final URI URL = URI.create("wss://localhost:12344")
+    private static final String keystorePassword = "zHRNZfWcwzLMRE4b4wGaaRkQHVGMpJ7d"
+
+    private static final String MT_URL = "127.0.0.1"
+    private static final int MT_LOGIN = 1
+    private static final String MT_PASSWORD = "manager"
 
     @Shared
     @Subject
-    private MtRemoteClient client = new MtRemoteClient()
+    private MtRemoteClient client = MtRemoteClient.createSecure(URL,
+            MtRemoteClientTest.classLoader.getResourceAsStream("keystore.jks"), keystorePassword, true)
 
     def setupSpec() {
         ReactorDebugAgent.init()
 
-        client.connect(URI.create(URL)).block(Duration.ofSeconds(30))
+        client.connect().block(Duration.ofSeconds(30))
         client.connectToMt(MT_URL, MT_LOGIN, MT_PASSWORD, Duration.ofSeconds(10)).block(Duration.ofSeconds(30))
     }
 
@@ -102,7 +105,7 @@ class MtRemoteClientTest extends Specification {
     def "reconnect"() {
         when:
         client.disconnect().block(Duration.ofSeconds(10))
-        client.connect(URI.create(URL)).block(Duration.ofSeconds(10))
+        client.connect().block(Duration.ofSeconds(10))
         client.connectToMt(MT_URL, MT_LOGIN, MT_PASSWORD, Duration.ofSeconds(10)).block()
 
         then:
@@ -234,7 +237,7 @@ class MtRemoteClientTest extends Specification {
 
         // New group is visible only after reconnect
         client.disconnect().block(Duration.ofSeconds(10))
-        client.connect(URI.create(URL)).block(Duration.ofSeconds(10))
+        client.connect().block(Duration.ofSeconds(10))
         client.connectToMt(MT_URL, MT_LOGIN, MT_PASSWORD, Duration.ofSeconds(10)).block()
 
         def group2 = client.config().groups().get("test").block(Duration.ofSeconds(10))
@@ -268,7 +271,7 @@ class MtRemoteClientTest extends Specification {
         client.config().groups().add(group).block(Duration.ofSeconds(10))
 
         client.disconnect().block(Duration.ofSeconds(10))
-        client.connect(URI.create(URL)).block(Duration.ofSeconds(10))
+        client.connect().block(Duration.ofSeconds(10))
         client.connectToMt(MT_URL, MT_LOGIN, MT_PASSWORD, Duration.ofSeconds(10)).block()
 
         when:
@@ -1038,7 +1041,7 @@ class MtRemoteClientTest extends Specification {
         noExceptionThrown()
     }
 
-//    @Ignore("Works only with manual trading via Terminal and symbol with Instant execution")
+    @Ignore("Works only with manual trading via Terminal and symbol with Instant execution")
     def "Start dealing and requote requests for IE execution"() {
 
         given:
