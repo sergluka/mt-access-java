@@ -4,9 +4,12 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.finplant.mt_remote_client.RpcClient;
 import com.finplant.mt_remote_client.dto.mt4.Mt4UserRecord;
 
+import lombok.val;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -26,7 +29,9 @@ public class UsersProcedures {
     }
 
     public Flux<Mt4UserRecord> get(List<Integer> logins) {
-        return client.call("users.get", Map.of("logins", logins), new TypeReference<List<Mt4UserRecord>>() {})
+        val params = new HashMap<String, Object>();
+        params.put("logins", logins);
+        return client.call("users.get", params, new TypeReference<List<Mt4UserRecord>>() {})
                      .flatMapMany(Flux::fromIterable);
     }
 
@@ -35,15 +40,17 @@ public class UsersProcedures {
     }
 
     public Mono<Mt4UserRecord> get(Integer login) {
-        return get(List.of(login)).single();
+        return get(Collections.singletonList(login)).single();
     }
 
     public Mono<Void> delete(List<Integer> logins) {
-        return client.call("users.del", Map.of("logins", logins));
+        val params = new HashMap<String, Object>();
+        params.put("logins", logins);
+        return client.call("users.del", params);
     }
 
     public Mono<Void> delete(Integer login) {
-        return delete(List.of(login));
+        return delete(Collections.singletonList(login));
     }
 
     public Flux<Mt4UserRecord> listen() {

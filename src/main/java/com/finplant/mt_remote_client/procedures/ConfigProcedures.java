@@ -1,5 +1,6 @@
 package com.finplant.mt_remote_client.procedures;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import com.finplant.mt_remote_client.RpcClient;
@@ -7,6 +8,7 @@ import com.finplant.mt_remote_client.dto.mt4.Mt4ConCommon;
 import com.finplant.mt_remote_client.dto.mt4.Mt4ConGroup;
 import com.finplant.mt_remote_client.dto.mt4.Mt4ConManager;
 
+import lombok.val;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -37,7 +39,7 @@ public class ConfigProcedures {
     private static class ConfigCommonProcedures {
         private final RpcClient client;
 
-        public ConfigCommonProcedures(RpcClient client) {
+        ConfigCommonProcedures(RpcClient client) {
             this.client = client;
         }
 
@@ -53,7 +55,7 @@ public class ConfigProcedures {
     private static class ConfigGroupsProcedures {
         private final RpcClient client;
 
-        public ConfigGroupsProcedures(RpcClient client) {
+        ConfigGroupsProcedures(RpcClient client) {
             this.client = client;
         }
 
@@ -62,7 +64,9 @@ public class ConfigProcedures {
         }
 
         public Mono<Mt4ConGroup> get(String group) {
-            return client.call("config.group.get", Map.of("group", group), Mt4ConGroup.class);
+            val params = new HashMap<String, Object>();
+            params.put("group", group);
+            return client.call("config.group.get", params, Mt4ConGroup.class);
         }
 
         public Mono<Void> set(Mt4ConGroup group) {
@@ -70,7 +74,9 @@ public class ConfigProcedures {
         }
 
         public Mono<Void> delete(String group) {
-            return client.call("config.group.del", Map.of("group", group));
+            val params = new HashMap<String, Object>();
+            params.put("group", group);
+            return client.call("config.group.del", params);
         }
 
         public Flux<Mt4ConGroup> listen() {
@@ -81,7 +87,7 @@ public class ConfigProcedures {
     private static class ConfigManagersProcedures {
         private final RpcClient client;
 
-        public ConfigManagersProcedures(RpcClient client) {
+        ConfigManagersProcedures(RpcClient client) {
             this.client = client;
         }
 
@@ -90,11 +96,15 @@ public class ConfigProcedures {
         }
 
         public Mono<Mt4ConManager> get(Integer login) {
-            return client.call("config.manager.get", Map.of("login", login), Mt4ConManager.class);
+            val params = new HashMap<String, Object>();
+            params.put("login", login);
+            return client.call("config.manager.get", params, Mt4ConManager.class);
         }
 
         public Mono<Void> delete(Integer login) {
-            return client.call("config.manager.del", Map.of("login", login));
+            val params = new HashMap<String, Object>();
+            params.put("login", login);
+            return client.call("config.manager.del", params);
         }
     }
 }

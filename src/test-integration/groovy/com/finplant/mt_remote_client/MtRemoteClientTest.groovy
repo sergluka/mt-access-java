@@ -68,7 +68,7 @@ class MtRemoteClientTest extends Specification {
         def user = Mt4UserRecord.builder()
                 .login(100)
                 .enable(true)
-                .group("miniforex")
+                .group("demoforex")
                 .enableChangePassword(true)
                 .readOnly(false)
                 .enableOtp(false)
@@ -306,7 +306,7 @@ class MtRemoteClientTest extends Specification {
         def user1 = Mt4UserRecord.builder()
                 .login(100)
                 .enable(true)
-                .group("miniforex")
+                .group("demoforex")
                 .enableChangePassword(true)
                 .readOnly(false)
                 .enableOtp(false)
@@ -367,7 +367,7 @@ class MtRemoteClientTest extends Specification {
         given:
         def user1 = Mt4UserRecord.builder()
                 .login(100)
-                .group("miniforex")
+                .group("demoforex")
                 .enableChangePassword(true)
                 .readOnly(false)
                 .enableOtp(false)
@@ -395,7 +395,7 @@ class MtRemoteClientTest extends Specification {
         def user1 = Mt4UserRecord.builder()
                 .login(101)
                 .enable(true)
-                .group("miniforex")
+                .group("demoforex")
                 .enableChangePassword(true)
                 .readOnly(false)
                 .enableOtp(false)
@@ -508,6 +508,7 @@ class MtRemoteClientTest extends Specification {
     }
 
     // TODO: Fix symbol.add for subscription
+    @Ignore
     def "Subscribe to EURUSD tick"() {
 
         given:
@@ -527,7 +528,7 @@ class MtRemoteClientTest extends Specification {
                     assert it.ask == newAsk
                 }
                 .thenCancel()
-                .verify()
+                .verify(Duration.ofSeconds(2))
 
         cleanup:
         client.symbols().hide("EURUSD").block()
@@ -543,7 +544,7 @@ class MtRemoteClientTest extends Specification {
                 .login(login)
                 .symbol("EURUSD")
                 .command(Mt4TradeRecord.Command.BUY)
-                .volume(0.01)
+                .volume(0.1)
                 .price(2.0)
                 .build()
 
@@ -558,7 +559,7 @@ class MtRemoteClientTest extends Specification {
         trade.login == login
         trade.symbol == "EURUSD"
         trade.command == Mt4TradeRecord.Command.BUY
-        trade.volume == 0.01
+        trade.volume == 0.1
         trade.openPrice == 2.0
         trade.openTime != null
         trade.closeTime == null
@@ -573,7 +574,7 @@ class MtRemoteClientTest extends Specification {
                 .login(login)
                 .symbol("EURUSD")
                 .command(Mt4TradeRecord.Command.BUY_STOP)
-                .volume(0.01)
+                .volume(0.10)
                 .price(2.2)
                 .build()
 
@@ -611,14 +612,14 @@ class MtRemoteClientTest extends Specification {
                 .login(login)
                 .symbol("EURUSD")
                 .command(Mt4TradeRecord.Command.SELL)
-                .volume(0.02)
+                .volume(0.20)
                 .price(2.0)
                 .build()
 
         def order = client.orders().open(openParams).block()
 
         when:
-        client.orders().close(order, 2.0, 0.02).block()
+        client.orders().close(order, 2.0, 0.2).block()
 
         then:
         def trade = client.orders().getHistory(login,
@@ -639,7 +640,7 @@ class MtRemoteClientTest extends Specification {
                 .login(login)
                 .symbol("EURUSD")
                 .command(Mt4TradeRecord.Command.SELL_LIMIT)
-                .volume(0.02)
+                .volume(0.20)
                 .price(2.2)
                 .build()
 
@@ -666,7 +667,7 @@ class MtRemoteClientTest extends Specification {
                 .login(login)
                 .symbol("EURUSD")
                 .command(Mt4TradeRecord.Command.SELL_LIMIT)
-                .volume(0.02)
+                .volume(0.20)
                 .price(2.2)
                 .build()
 
@@ -730,14 +731,14 @@ class MtRemoteClientTest extends Specification {
                 .login(login)
                 .symbol("EURUSD")
                 .command(Mt4TradeRecord.Command.BUY)
-                .volume(0.02)
+                .volume(0.20)
                 .price(2.0)
                 .build()
         def openParams2 = OrderProcedures.OpenOrderParameters.builder()
                 .login(login)
                 .symbol("EURUSD")
                 .command(Mt4TradeRecord.Command.SELL)
-                .volume(0.05)
+                .volume(0.50)
                 .price(2.0)
                 .build()
 
@@ -752,7 +753,7 @@ class MtRemoteClientTest extends Specification {
 
         closedTrades[0].with {
             assert it.order == order1
-            assert it.volume == 0.02
+            assert it.volume == 0.2
             assert it.command == Mt4TradeRecord.Command.BUY
             assert it.comment == "partial close"
         }
@@ -766,7 +767,7 @@ class MtRemoteClientTest extends Specification {
         def trade2 = client.orders().get(order2 + 1).block()
 
         trade2.order == order2 + 1
-        trade2.volume == 0.03
+        trade2.volume == 0.3
         trade2.command == Mt4TradeRecord.Command.SELL
         trade2.comment == "from #${order1}"
     }
@@ -780,21 +781,21 @@ class MtRemoteClientTest extends Specification {
                 .login(login)
                 .symbol("EURUSD")
                 .command(Mt4TradeRecord.Command.BUY)
-                .volume(0.07)
+                .volume(0.7)
                 .price(2.0)
                 .build()
         def openParams2 = OrderProcedures.OpenOrderParameters.builder()
                 .login(login)
                 .symbol("EURUSD")
                 .command(Mt4TradeRecord.Command.SELL)
-                .volume(0.05)
+                .volume(0.5)
                 .price(2.0)
                 .build()
         def openParams3 = OrderProcedures.OpenOrderParameters.builder()
                 .login(login)
                 .symbol("EURUSD")
                 .command(Mt4TradeRecord.Command.SELL)
-                .volume(0.10)
+                .volume(1.0)
                 .price(2.0)
                 .build()
 
@@ -820,7 +821,7 @@ class MtRemoteClientTest extends Specification {
         }
         closedTrades[1].with {
             assert it.order == order3
-            assert it.volume == 0.02
+            assert it.volume == 0.2
             assert it.command == Mt4TradeRecord.Command.SELL
             assert it.comment == "partial close"
         }
@@ -836,7 +837,7 @@ class MtRemoteClientTest extends Specification {
 
         openedTrades[0].with {
             assert it.order == order3 + 2
-            assert it.volume == 0.08
+            assert it.volume == 0.8
             assert it.command == Mt4TradeRecord.Command.SELL
             assert it.comment == "partial close"
         }
@@ -851,7 +852,7 @@ class MtRemoteClientTest extends Specification {
                 .login(login)
                 .symbol("EURUSD")
                 .command(Mt4TradeRecord.Command.SELL)
-                .volume(0.02)
+                .volume(0.20)
                 .price(2.0)
                 .build()
 
@@ -875,7 +876,7 @@ class MtRemoteClientTest extends Specification {
                 .login(login)
                 .symbol("EURUSD")
                 .command(Mt4TradeRecord.Command.SELL)
-                .volume(0.02)
+                .volume(0.20)
                 .price(2.0)
                 .build()
 
@@ -884,7 +885,7 @@ class MtRemoteClientTest extends Specification {
 
         when:
         sleep(1000)
-        def openOrders = client.orders().getByLogin(login, "miniforex").collectList().block()
+        def openOrders = client.orders().getByLogin(login, "demoforex").collectList().block()
 
         then:
         assertThat(openOrders).extracting("order").containsExactly(order1, order2)
@@ -902,7 +903,7 @@ class MtRemoteClientTest extends Specification {
                 .login(login)
                 .symbol("EURUSD")
                 .command(Mt4TradeRecord.Command.SELL)
-                .volume(0.02)
+                .volume(0.20)
                 .price(2.0)
                 .build()
 

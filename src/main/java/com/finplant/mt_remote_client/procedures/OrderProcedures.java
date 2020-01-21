@@ -36,23 +36,39 @@ public class OrderProcedures {
     }
 
     public Mono<Void> close(int order, BigDecimal price, BigDecimal volume) {
-        return client.call("order.close", Map.of("order", order, "price", price, "volume", volume));
+        val params = new HashMap<String, Object>();
+        params.put("order", order);
+        params.put("price", price);
+        params.put("volume", volume);
+        return client.call("order.close", params);
     }
 
     public Mono<Void> closeBy(int order, int orderBy) {
-        return client.call("order.close_by", Map.of("order", order, "order_by", orderBy));
+        val params = new HashMap<String, Object>();
+        params.put("order", order);
+        params.put("order_by", orderBy);
+        return client.call("order.close_by", params);
     }
 
     public Mono<Void> closeAll(int login, String symbol) {
-        return client.call("order.close_all", Map.of("login", login, "symbol", symbol));
+        val params = new HashMap<String, Object>();
+        params.put("login", login);
+        params.put("symbol", symbol);
+        return client.call("order.close_all", params);
     }
 
     public Mono<Void> cancel(int order, Mt4TradeRecord.Command command) {
-        return client.call("order.cancel", Map.of("order", order, "command", command));
+        val params = new HashMap<String, Object>();
+        params.put("order", order);
+        params.put("command", command);
+        return client.call("order.cancel", params);
     }
 
     public Mono<Void> activate(int order, BigDecimal price) {
-        return client.call("order.activate", Map.of("order", order, "price", price));
+        val params = new HashMap<String, Object>();
+        params.put("order", order);
+        params.put("price", price);
+        return client.call("order.activate", params);
     }
 
     public Mono<Integer> balance(@NonNull BalanceOrderParameters parameters) {
@@ -60,7 +76,9 @@ public class OrderProcedures {
     }
 
     public Mono<Mt4TradeRecord> get(int order) {
-        return client.call("trade.get", Map.of("order", order), Mt4TradeRecord.class);
+        val params = new HashMap<String, Object>();
+        params.put("order", order);
+        return client.call("trade.get", params, Mt4TradeRecord.class);
     }
 
     public Flux<Mt4TradeRecord> getAll() {
@@ -68,9 +86,10 @@ public class OrderProcedures {
     }
 
     public Flux<Mt4TradeRecord> getByLogin(int login, String group) {
-        return client.call("trades.get.by_login",
-                           Map.of("login", login, "group", group),
-                           new TypeReference<List<Mt4TradeRecord>>() {})
+        val params = new HashMap<String, Object>();
+        params.put("login", login);
+        params.put("group", group);
+        return client.call("trades.get.by_login", params, new TypeReference<List<Mt4TradeRecord>>() {})
                      .flatMapMany(Flux::fromIterable);
     }
 
@@ -84,7 +103,6 @@ public class OrderProcedures {
         if (to != null) {
             params.put("to", to.toEpochSecond(ZoneOffset.UTC));
         }
-
         return client.call("trades.history", params, new TypeReference<List<Mt4TradeRecord>>() {})
                      .flatMapMany(Flux::fromIterable);
     }

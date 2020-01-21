@@ -184,7 +184,7 @@ public class Mt4ConCommon {
     private Integer overnightPrevTime;
 
     @JsonProperty("stop_delay_seconds")
-    private Integer stopDelaySeconds; // TODO
+    private Integer stopDelaySeconds;
 
     @JsonProperty("stop_reason")
     private StopReason stopReason;

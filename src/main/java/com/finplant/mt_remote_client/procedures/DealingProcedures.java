@@ -1,12 +1,14 @@
 package com.finplant.mt_remote_client.procedures;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.finplant.mt_remote_client.RpcClient;
 import com.finplant.mt_remote_client.dto.mt4.Mt4TradeRequest;
 
+import lombok.val;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -35,21 +37,33 @@ public class DealingProcedures {
         this.client = client;
     }
 
-    public Mono<Void> confirm(int request_id, BigDecimal bid, BigDecimal ask, ConfirmMode mode) {
-        return client.call("request.confirm",
-                           Map.of("request_id", request_id, "bid", bid, "ask", ask, "mode", mode));
+    public Mono<Void> confirm(int requestId, BigDecimal bid, BigDecimal ask, ConfirmMode mode) {
+        val params = new HashMap<String, Object>();
+        params.put("requestId", requestId);
+        params.put("bid", bid);
+        params.put("ask", ask);
+        params.put("mode", mode);
+        return client.call("request.confirm", params);
     }
 
-    public Mono<Void> requote(int request_id, BigDecimal bid, BigDecimal ask) {
-        return client.call("request.requote", Map.of("request_id", request_id, "bid", bid, "ask", ask));
+    public Mono<Void> requote(int requestId, BigDecimal bid, BigDecimal ask) {
+        val params = new HashMap<String, Object>();
+        params.put("requestId", requestId);
+        params.put("bid", bid);
+        params.put("ask", ask);
+        return client.call("request.requote", params);
     }
 
     public Mono<Void> reject(Integer requestId) {
-        return client.call("request.reject", Map.of("request_id", requestId));
+        val params = new HashMap<String, Object>();
+        params.put("requestId", requestId);
+        return client.call("request.reject", params);
     }
 
     public Mono<Void> reset(Integer requestId) {
-        return client.call("request.reset", Map.of("request_id", requestId));
+        val params = new HashMap<String, Object>();
+        params.put("requestId", requestId);
+        return client.call("request.reset", params);
     }
 
     public Flux<Mt4TradeRequest> listen() {
