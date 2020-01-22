@@ -39,7 +39,7 @@ public class DealingProcedures {
 
     public Mono<Void> confirm(int requestId, BigDecimal bid, BigDecimal ask, ConfirmMode mode) {
         val params = new HashMap<String, Object>();
-        params.put("requestId", requestId);
+        params.put("request_id", requestId);
         params.put("bid", bid);
         params.put("ask", ask);
         params.put("mode", mode);
@@ -48,7 +48,7 @@ public class DealingProcedures {
 
     public Mono<Void> requote(int requestId, BigDecimal bid, BigDecimal ask) {
         val params = new HashMap<String, Object>();
-        params.put("requestId", requestId);
+        params.put("request_id", requestId);
         params.put("bid", bid);
         params.put("ask", ask);
         return client.call("request.requote", params);
@@ -56,13 +56,13 @@ public class DealingProcedures {
 
     public Mono<Void> reject(Integer requestId) {
         val params = new HashMap<String, Object>();
-        params.put("requestId", requestId);
+        params.put("request_id", requestId);
         return client.call("request.reject", params);
     }
 
     public Mono<Void> reset(Integer requestId) {
         val params = new HashMap<String, Object>();
-        params.put("requestId", requestId);
+        params.put("request_id", requestId);
         return client.call("request.reset", params);
     }
 
