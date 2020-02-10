@@ -24,7 +24,9 @@ public class MarketProcedures {
     public Mono<Void> add(String symbol, BigDecimal bid, BigDecimal ask) {
         val params = new HashMap<String, Object>();
         params.put("symbol", symbol);
-        return client.call("ticks.get", params);
+        params.put("bid", bid);
+        params.put("ask", ask);
+        return client.call("tick.add", params);
     }
 
     public Flux<Mt4Tick> get(String symbol) {

@@ -48,15 +48,15 @@ public class RpcClient implements AutoCloseable {
         this.client = client;
 
         val messagesDisposable = client.listen()
-                               .map(this::toJsonNode)
-                               .doOnError(this::logMessageError)
-                               .retry()
-                               .subscribe(this::onMessage, this::logMessageError);
+                                       .map(this::toJsonNode)
+                                       .doOnError(this::logMessageError)
+                                       .retry()
+                                       .subscribe(this::onMessage, this::logMessageError);
         disposables.add(messagesDisposable);
 
         val disconnectDisposable = client.connectionStatus()
-              .filter(connected -> !connected)
-              .subscribe(connected -> cleanup());
+                                         .filter(connected -> !connected)
+                                         .subscribe(connected -> cleanup());
         disposables.add(disconnectDisposable);
 
         initializeMapper();
@@ -80,31 +80,31 @@ public class RpcClient implements AutoCloseable {
     }
 
     public <I, T> Mono<T> call(String method, I payload, Class<T> resultClass) {
-        return makeRequest(method, payload).map(response -> parse(response, resultClass));
+        return doCall(method, payload).map(response -> parse(response, resultClass));
     }
 
     public <I, T> Mono<T> call(String method, I payload, TypeReference<T> typeReference) {
-        return makeRequest(method, payload).map(response -> parse(response, typeReference));
+        return doCall(method, payload).map(response -> parse(response, typeReference));
     }
 
     public <I, T> Mono<T> call(String method, TypeReference<T> typeReference) {
-        return makeRequest(method, null).map(response -> parse(response, typeReference));
+        return doCall(method, null).map(response -> parse(response, typeReference));
     }
 
     public <T> Mono<T> call(String method, Class<T> resultClass) {
-        return makeRequest(method, null).map(response -> parse(response, resultClass));
+        return doCall(method, null).map(response -> parse(response, resultClass));
     }
 
     public <T> Mono<Void> call(String method, T payload) {
-        return makeRequest(method, payload).then();
+        return doCall(method, payload).then();
     }
 
     public Mono<Void> call(String method) {
-        return makeRequest(method, null).then();
+        return doCall(method, null).then();
     }
 
     public <T> Flux<T> subscribe(String subscription, Class<T> eventClass) {
-        return makeSubscription(subscription, eventClass);
+        return doSubscription(subscription).map(json -> parse(json, eventClass));
     }
 
     private void cleanup() {
@@ -117,29 +117,36 @@ public class RpcClient implements AutoCloseable {
         subscriptions.clear();
     }
 
-    private <T> Mono<JsonNode> makeRequest(String method, T payload) {
+    private <T> Mono<JsonNode> doCall(String method, T payload) {
 
         return Mono.defer(() -> {
 
             long id = idCounter.getAndIncrement();
             val json = makeJson(method, payload, id);
 
-            val addRequestMono = Mono.<JsonNode>create(sink -> {
+            val storeRequest = Mono.<JsonNode>create(sink -> {
                 requests.put(id, sink);
                 sink.onDispose(() -> requests.remove(id));
             });
-            return client.send(json).then(addRequestMono);
+
+            return storeRequest.delaySubscription(client.send(json));
         });
     }
 
-    private <T> Flux<T> makeSubscription(String name, Class<T> eventClass) {
-        val subscribeRequest = call("subscribe", new Subscription(name), eventClass);
-        val unSubscribeRequest = call("unsubscribe", new Subscription(name), eventClass);
+    private Flux<JsonNode> doSubscription(String name) {
 
-        val storeSubscription = Flux.<JsonNode>create(sink -> subscriptions.put(name, sink))
-              .<T>map(json -> parse(json, eventClass));
+        return Flux.defer(() -> {
 
-        return Flux.concat(subscribeRequest, storeSubscription, unSubscribeRequest);
+            val subscribeRequest = call("subscribe", new Subscription(name));
+            val unSubscribeRequest = call("unsubscribe", new Subscription(name));
+
+            val storeSubscription = Flux.<JsonNode>create(sink -> {
+                subscriptions.put(name, sink);
+                sink.onDispose(unSubscribeRequest::subscribe);
+            });
+
+            return storeSubscription.delaySubscription(subscribeRequest);
+        });
     }
 
     @SneakyThrows

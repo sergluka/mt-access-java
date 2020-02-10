@@ -1,13 +1,19 @@
 package com.finplant.mt_remote_client;
 
+import java.nio.ByteBuffer;
+
+import org.eclipse.jetty.websocket.api.CloseStatus;
+import org.eclipse.jetty.websocket.api.Session;
+import org.eclipse.jetty.websocket.api.StatusCode;
+import org.eclipse.jetty.websocket.api.WebSocketListener;
+import org.eclipse.jetty.websocket.api.WebSocketPingPongListener;
+import org.eclipse.jetty.websocket.api.WriteCallback;
+
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.jetty.websocket.api.*;
 import reactor.core.publisher.DirectProcessor;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoSink;
 import reactor.core.publisher.ReplayProcessor;
-
-import java.nio.ByteBuffer;
 
 @Slf4j
 public class WsClientImpl implements WebSocketListener, WebSocketPingPongListener {
@@ -34,10 +40,8 @@ public class WsClientImpl implements WebSocketListener, WebSocketPingPongListene
 
         log.info("Connection is closed. code={}, reason={}", statusCode, reason);
 
-        if (statusCode == StatusCode.NO_CLOSE) {
-            log.error("Connection closed abnormally");
-        } else if (statusCode != StatusCode.NORMAL) {
-            log.error("Connection closed because of error");
+        if (statusCode != StatusCode.NORMAL && statusCode != StatusCode.NO_CLOSE) {
+            log.warn("Connection closed because of error");
         }
 
         if (disconnectSink != null) {
@@ -93,13 +97,14 @@ public class WsClientImpl implements WebSocketListener, WebSocketPingPongListene
 
     public Mono<Void> send(String message) {
 
-        log.trace("<=: {}", message);
-
-        if (session == null) {
-            throw new IllegalStateException("Not connected");
-        }
-
         return Mono.create(sink -> {
+            log.trace("<=: {}", message);
+
+            if (session == null) {
+                sink.error(new IllegalStateException("Not connected"));
+                return;
+            }
+
             session.getRemote().sendString(message, new WriteCallback() {
 
                 @Override

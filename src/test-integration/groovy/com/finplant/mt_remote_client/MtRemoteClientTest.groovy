@@ -1,24 +1,11 @@
 package com.finplant.mt_remote_client
 
 import com.finplant.mt_remote_client.common.BaseSpecification
-import com.finplant.mt_remote_client.dto.mt4.Mt4ConManagerSecurity
-import com.finplant.mt_remote_client.dto.mt4.Mt4ConCommon
-import com.finplant.mt_remote_client.dto.mt4.Mt4ConGroup
-import com.finplant.mt_remote_client.dto.mt4.Mt4ConGroupMargin
-import com.finplant.mt_remote_client.dto.mt4.Mt4ConManager
-import com.finplant.mt_remote_client.dto.mt4.Mt4TradeRecord
-import com.finplant.mt_remote_client.dto.mt4.Mt4TradeRequest
-import com.finplant.mt_remote_client.dto.mt4.Mt4TradeTransaction
-import com.finplant.mt_remote_client.dto.mt4.Mt4UserRecord
-import com.finplant.mt_remote_client.procedures.DealingProcedures
+import com.finplant.mt_remote_client.dto.mt4.*
 import com.finplant.mt_remote_client.procedures.OrderProcedures
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
-import reactor.tools.agent.ReactorDebugAgent
 import spock.lang.Ignore
-import spock.lang.Shared
-import spock.lang.Specification
-import spock.lang.Subject
 
 import java.time.Duration
 import java.time.LocalDateTime
@@ -137,7 +124,7 @@ class MtRemoteClientTest extends BaseSpecification {
                 .templatesPath("c:/")
                 .copies(10)
                 .reports(true)
-                .defaultLeverage(1000) // TODO
+                .defaultLeverage(1000)
                 .defaultDeposit(100000.0)
                 .maxSymbols(0)
                 .currency("EUR")
@@ -439,28 +426,26 @@ class MtRemoteClientTest extends BaseSpecification {
         client.symbols().hide("EURUSD").block()
     }
 
-    // TODO: Fix symbol.add for subscription
-    @Ignore
     def "Subscribe to EURUSD tick"() {
 
         given:
         client.symbols().show("EURUSD").block()
-
-        sleep(1000)
-        def tick = client.market().get("EURUSD").blockFirst()
-        def newBid = tick.bid + 0.0001
-        def newAsk = tick.ask + 0.0001
+        client.market().add("EURUSD", 0.21, 0.31).block()
+        //  Flush all previous events
+        client.market().listen().timeout(Duration.ofSeconds(1), Mono.empty()).blockLast()
 
         expect:
         StepVerifier.create(client.market().listen())
-                .then { client.market().add("EURUSD", newBid, newAsk).block() }
+                .then {
+                    client.market().add("EURUSD", 0.22, 0.32).block()
+                }
                 .assertNext {
-                    assert it.time != null
-                    assert it.bid == newBid
-                    assert it.ask == newAsk
+                    assertThat(it.time).isNotNull()
+                    assertThat(it.bid).isEqualTo(0.22)
+                    assertThat(it.ask).isEqualTo(0.32)
                 }
                 .thenCancel()
-                .verify(Duration.ofSeconds(2))
+                .verify(Duration.ofSeconds(1000))
 
         cleanup:
         client.symbols().hide("EURUSD").block()
@@ -481,11 +466,11 @@ class MtRemoteClientTest extends BaseSpecification {
                 .build()
 
         when:
-        def order = client.orders().open(openParams).block()
+        def order = client.orders().open(openParams).block(Duration.ofSeconds(1))
 
         then:
         sleep(1000)
-        def trade = client.orders().get(order).block()
+        def trade = client.orders().get(order).block(Duration.ofSeconds(1))
 
         trade.order == order
         trade.login == login
@@ -555,8 +540,8 @@ class MtRemoteClientTest extends BaseSpecification {
 
         then:
         def trade = client.orders().getHistory(login,
-                                               LocalDateTime.of(2020, 1, 1, 0, 0, 0),
-                                               LocalDateTime.of(2030, 1, 1, 0, 0, 0)).blockLast()
+                LocalDateTime.of(2020, 1, 1, 0, 0, 0),
+                LocalDateTime.of(2030, 1, 1, 0, 0, 0)).blockLast()
 
         trade.order == order
         trade.profit == 0.0
