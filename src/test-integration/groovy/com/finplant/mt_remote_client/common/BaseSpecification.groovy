@@ -22,7 +22,7 @@ class BaseSpecification extends Specification {
 
     @Shared
     @Subject
-    private MtRemoteClient client = MtRemoteClient.createSecure(URL,
+    protected MtRemoteClient client = MtRemoteClient.createSecure(URL,
             BaseSpecification.classLoader.getResourceAsStream("keystore.jks"), keystorePassword, true)
 
     def setupSpec() {

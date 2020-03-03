@@ -205,7 +205,7 @@ class MtRemoteClientTest extends BaseSpecification {
     def "Subscribe to groups"() {
 
         given:
-        client.config().groups().delete("test").onErrorResume { Mono.empty() }.block()
+        client.config().groups().delete("test").onErrorResume { Mono.empty() }.block(Duration.ofSeconds(10))
 
         def group1 = Mt4ConGroup.builder()
                 .group("test")
