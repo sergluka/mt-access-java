@@ -43,8 +43,32 @@ public class Mt4TradeTransaction {
         }
     }
 
+    public enum Flags {
+        TT_FLAG_NONE("none"),
+        TT_FLAG_SIGNAL("signal"),
+        TT_FLAG_EXPERT("expert"),
+        TT_FLAG_GATEWAY("gateway"),
+        TT_FLAG_MOBILE("mobile"),
+        TT_FLAG_WEB("web"),
+        TT_FLAG_API("api");
+
+        private final String value;
+
+        Flags(String value) {
+            this.value = value;
+        }
+
+        @JsonValue
+        public String getValue() {
+            return value;
+        }
+    }
+
     @JsonProperty("type")
     private Type type;
+
+    @JsonProperty("flags")
+    private Flags flags;
 
     @JsonProperty("cmd")
     private Mt4TradeRecord.Command command;
@@ -71,7 +95,7 @@ public class Mt4TradeTransaction {
     private BigDecimal takeProfit;
 
     @JsonProperty("ie_deviation")
-    private Integer ie_deviation;
+    private Integer ieDeviation;
 
     @JsonProperty("comment")
     private String comment;

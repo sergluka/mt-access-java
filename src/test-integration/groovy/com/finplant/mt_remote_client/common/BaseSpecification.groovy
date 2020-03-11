@@ -4,6 +4,8 @@ import com.finplant.mt_remote_client.MtRemoteClient
 import com.finplant.mt_remote_client.dto.mt4.Mt4TradeRecord
 import com.finplant.mt_remote_client.dto.mt4.Mt4UserRecord
 import com.finplant.mt_remote_client.procedures.OrderProcedures
+import reactor.core.Disposable
+import reactor.core.publisher.MonoProcessor
 import reactor.tools.agent.ReactorDebugAgent
 import spock.lang.Shared
 import spock.lang.Specification
@@ -11,7 +13,7 @@ import spock.lang.Subject
 
 import java.time.Duration
 
-class BaseSpecification extends Specification {
+abstract class BaseSpecification extends Specification {
 
     protected static final URI URL = URI.create("wss://localhost:12344")
     protected static final String keystorePassword = "zHRNZfWcwzLMRE4b4wGaaRkQHVGMpJ7d"
@@ -20,24 +22,60 @@ class BaseSpecification extends Specification {
     protected static final int MT_LOGIN = 1
     protected static final String MT_PASSWORD = "manager"
 
+    private static final def params = MtRemoteClient.ConnectionParameters.builder()
+            .uri(URL)
+            .server(MT_URL)
+            .login(MT_LOGIN)
+            .password(MT_PASSWORD)
+            .build()
+
     @Shared
     @Subject
-    protected MtRemoteClient client = MtRemoteClient.createSecure(URL,
-            BaseSpecification.classLoader.getResourceAsStream("keystore.jks"), keystorePassword, true)
+    protected MtRemoteClient client =
+            MtRemoteClient.createSecure(params,
+                                        BaseSpecification.classLoader.getResourceAsStream("keystore.jks"),
+                                        keystorePassword, true)
+
+    @Shared
+    private Disposable connectionDisposable
+
+    abstract def autoConnect()
 
     def setupSpec() {
         ReactorDebugAgent.init()
 
-        client.connect().block(Duration.ofSeconds(30))
-        client.connectToMt(MT_URL, MT_LOGIN, MT_PASSWORD, Duration.ofSeconds(10)).block(Duration.ofSeconds(30))
+        if (autoConnect()) {
+            connect()
+        }
     }
 
     def setup() {
-        cleanupMt()
+        if (autoConnect() && connectionDisposable != null) {
+            cleanupMt()
+        }
     }
 
     def cleanupSpec() {
-        client.disconnect().block(Duration.ofSeconds(30))
+        if (autoConnect()) {
+            disconnect()
+        }
+    }
+
+    protected connect() {
+        MonoProcessor blockingProcessor = MonoProcessor.create();
+        connectionDisposable = client.connection().subscribe({ blockingProcessor.onNext(true) })
+        blockingProcessor.timeout(Duration.ofSeconds(30)).block()
+    }
+
+    protected disconnect() {
+        if (connectionDisposable != null) {
+            connectionDisposable.dispose()
+        }
+    }
+
+    protected reconnect() {
+        disconnect()
+        connect()
     }
 
     protected def addUser(def deposit = 1000000.0) {

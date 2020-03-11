@@ -36,7 +36,8 @@ public class UsersProcedures {
     }
 
     public Flux<Mt4UserRecord> getAll() {
-        return client.call("users.get.all", new TypeReference<List<Mt4UserRecord>>() {}).flatMapMany(Flux::fromIterable);
+        return client.call("users.get.all", new TypeReference<List<Mt4UserRecord>>() {})
+                     .flatMapMany(Flux::fromIterable);
     }
 
     public Mono<Mt4UserRecord> get(Integer login) {

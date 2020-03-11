@@ -1,16 +1,14 @@
 package com.finplant.mt_remote_client.procedures;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.finplant.mt_remote_client.RpcClient;
 import com.finplant.mt_remote_client.dto.mt4.Mt4ConCommon;
 import com.finplant.mt_remote_client.dto.mt4.Mt4ConGroup;
 import com.finplant.mt_remote_client.dto.mt4.Mt4ConManager;
-
 import lombok.val;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.HashMap;
 
 public class ConfigProcedures {
 

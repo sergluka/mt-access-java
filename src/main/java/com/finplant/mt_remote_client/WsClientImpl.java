@@ -10,19 +10,18 @@ import org.eclipse.jetty.websocket.api.WebSocketPingPongListener;
 import org.eclipse.jetty.websocket.api.WriteCallback;
 
 import lombok.extern.slf4j.Slf4j;
-import reactor.core.publisher.DirectProcessor;
-import reactor.core.publisher.Mono;
-import reactor.core.publisher.MonoSink;
-import reactor.core.publisher.ReplayProcessor;
+import reactor.core.publisher.*;
 
 @Slf4j
-public class WsClientImpl implements WebSocketListener, WebSocketPingPongListener {
+public abstract class WsClientImpl implements WebSocketListener, WebSocketPingPongListener {
 
-    private final ReplayProcessor<Boolean> connectionProcessor = ReplayProcessor.cacheLastOrDefault(false);
     private final DirectProcessor<String> messageProcessor = DirectProcessor.create();
 
     private Session session;
-    private MonoSink<Void> disconnectSink;
+
+    protected abstract void onConnectionLost(Throwable cause);
+    protected abstract void onConnected();
+    protected abstract void onDisconnected();
 
     @Override
     public void onWebSocketBinary(byte[] payload, int offset, int len) {
@@ -38,30 +37,30 @@ public class WsClientImpl implements WebSocketListener, WebSocketPingPongListene
     @Override
     public void onWebSocketClose(int statusCode, String reason) {
 
-        log.info("Connection is closed. code={}, reason={}", statusCode, reason);
+        try {
+            log.info("Connection is closed. code={}, reason={}", statusCode, reason);
 
-        if (statusCode != StatusCode.NORMAL && statusCode != StatusCode.NO_CLOSE) {
-            log.warn("Connection closed because of error");
+            if (statusCode != StatusCode.NORMAL) {
+                onConnectionLost(new Errors.ConnectionLostError(statusCode, reason));
+            }
+            onDisconnected();
+        } catch (Exception e) {
+            log.error("Fail to handle connection closing", e);
         }
-
-        if (disconnectSink != null) {
-            disconnectSink.success();
-        }
-        connectionProcessor.onNext(false);
 
         session = null;
     }
 
     @Override
-    public void onWebSocketConnect(Session session) {
+    public void onWebSocketConnect(Session newSession) {
         log.info("Connected");
-        this.session = session;
-        connectionProcessor.onNext(true);
+        this.session = newSession;
+        onConnected();
     }
 
     @Override
     public void onWebSocketError(Throwable cause) {
-        log.error("Websocket error", cause);
+        onConnectionLost(new Errors.ConnectionError(cause));
     }
 
     @Override
@@ -74,25 +73,14 @@ public class WsClientImpl implements WebSocketListener, WebSocketPingPongListene
         log.trace("PONG");
     }
 
-    public ReplayProcessor<Boolean> getConnectionProcessor() {
-        return connectionProcessor;
-    }
-
-    public DirectProcessor<String> getMessageProcessor() {
+    public DirectProcessor<String> messages() {
         return messageProcessor;
     }
 
-    public Mono<Void> disconnect() {
-
-        return Mono.create(sink -> {
-            disconnectSink = sink;
-
-            if (session == null) {
-                disconnectSink.success();
-                return;
-            }
-            session.close(new CloseStatus(StatusCode.NORMAL, "Client disconnected"));
-        });
+    public void disconnect() {
+        if (session != null) {
+            session.close(new CloseStatus(StatusCode.NORMAL, "Client is disconnected"));
+        }
     }
 
     public Mono<Void> send(String message) {

@@ -1,13 +1,5 @@
 package com.finplant.mt_remote_client;
 
-import java.net.URI;
-import java.time.LocalDateTime;
-import java.time.Month;
-import java.time.ZoneOffset;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -21,16 +13,22 @@ import com.finplant.mt_remote_client.dto.jackson.BytesMapping;
 import com.finplant.mt_remote_client.dto.jackson.LocalDateTimeMapping;
 import com.finplant.mt_remote_client.dto.jackson.MonthMapping;
 import com.finplant.mt_remote_client.dto.jackson.ZoneOffsetMapping;
-
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import reactor.core.Disposable;
-import reactor.core.Disposables;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoSink;
+
+import java.net.URI;
+import java.time.LocalDateTime;
+import java.time.Month;
+import java.time.ZoneOffset;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
 public class RpcClient implements AutoCloseable {
@@ -42,41 +40,17 @@ public class RpcClient implements AutoCloseable {
 
     private final ObjectMapper mapper = new ObjectMapper();
     private final AtomicLong idCounter = new AtomicLong(0);
-    private final Disposable.Composite disposables = Disposables.composite();
+
+    private Disposable messagesDisposable;
 
     public RpcClient(WsClient client) {
         this.client = client;
-
-        val messagesDisposable = client.listen()
-                                       .map(this::toJsonNode)
-                                       .doOnError(this::logMessageError)
-                                       .retry()
-                                       .subscribe(this::onMessage, this::logMessageError);
-        disposables.add(messagesDisposable);
-
-        val disconnectDisposable = client.connectionStatus()
-                                         .filter(connected -> !connected)
-                                         .subscribe(connected -> cleanup());
-        disposables.add(disconnectDisposable);
-
         initializeMapper();
     }
 
     @Override
     public void close() {
-        disposables.dispose();
-    }
-
-    public Mono<Void> connect(URI url) {
-        return client.connect(url);
-    }
-
-    public Flux<Boolean> connection() {
-        return client.connection();
-    }
-
-    public Mono<Void> disconnect() {
-        return client.disconnect();
+        messagesDisposable.dispose();
     }
 
     public <I, T> Mono<T> call(String method, I payload, Class<T> resultClass) {
@@ -87,7 +61,7 @@ public class RpcClient implements AutoCloseable {
         return doCall(method, payload).map(response -> parse(response, typeReference));
     }
 
-    public <I, T> Mono<T> call(String method, TypeReference<T> typeReference) {
+    public <T> Mono<T> call(String method, TypeReference<T> typeReference) {
         return doCall(method, null).map(response -> parse(response, typeReference));
     }
 
@@ -107,9 +81,33 @@ public class RpcClient implements AutoCloseable {
         return doSubscription(subscription).map(json -> parse(json, eventClass));
     }
 
+    Flux<Boolean> connection(URI url, Map<String, String> headers) {
+
+        return Flux.defer(() -> {
+            if (client.isConnected()) {
+                return Flux.error(new Errors.AlreadyConnectedError());
+            }
+
+            return client.connection(url, headers)
+                         .doOnNext(unused -> listenForMessages())
+                         .doFinally(signal -> cleanup());
+        });
+    }
+
+    private void listenForMessages() {
+        if (messagesDisposable != null) {
+            messagesDisposable.dispose();
+        }
+        messagesDisposable = client.listen()
+                                   .map(this::toJsonNode)
+                                   .doOnError(this::logMessageError)
+                                   .retry()
+                                   .subscribe(this::onMessage, this::logMessageError);
+    }
+
     private void cleanup() {
 
-        log.debug("Cleanup");
+        log.trace("Cleanup");
 
         requests.values().forEach(MonoSink::success);
         requests.clear();
@@ -141,8 +139,16 @@ public class RpcClient implements AutoCloseable {
             val unSubscribeRequest = call("unsubscribe", new Subscription(name));
 
             val storeSubscription = Flux.<JsonNode>create(sink -> {
-                subscriptions.put(name, sink);
-                sink.onDispose(unSubscribeRequest::subscribe);
+                val oldSink = subscriptions.put(name, sink);
+                if (oldSink != null) {
+                    sink.error(new Exception("Subscription already exists"));
+                    return;
+                }
+
+                sink.onDispose(() -> {
+                    unSubscribeRequest.subscribe();
+                    subscriptions.remove(name);
+                });
             });
 
             return storeSubscription.delaySubscription(subscribeRequest);

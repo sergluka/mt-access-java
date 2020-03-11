@@ -50,6 +50,7 @@ shadowJar {
 checkstyle {
     toolVersion = '8.14'
     configFile = new File("checkstyle.xml")
+    maxWarnings = 0
     ignoreFailures = false
 }
 

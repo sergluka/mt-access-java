@@ -1,3 +1,5 @@
+package com.finplant.mt_remote_client
+
 import com.finplant.mt_remote_client.common.BaseSpecification
 import com.finplant.mt_remote_client.dto.mt4.Mt4TradeRequest
 import com.finplant.mt_remote_client.dto.mt4.Mt4TradeTransaction
@@ -7,8 +9,13 @@ import spock.lang.Ignore
 
 import java.time.Duration
 
-//@Ignore("Works only with manual trading via Terminal and symbol with Market execution")
+@Ignore("Works only with manual trading via Terminal and symbol with Market execution")
 class DealingTests extends BaseSpecification {
+
+    @Override
+    def autoConnect() {
+        return true
+    }
 
     def "Start dealing and confirm requests"() {
 

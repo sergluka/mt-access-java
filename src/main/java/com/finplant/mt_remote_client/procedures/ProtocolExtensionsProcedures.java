@@ -6,7 +6,6 @@ import reactor.core.publisher.Mono;
 
 import java.util.Base64;
 import java.util.HashMap;
-import java.util.Map;
 
 public class ProtocolExtensionsProcedures {
     private final RpcClient client;

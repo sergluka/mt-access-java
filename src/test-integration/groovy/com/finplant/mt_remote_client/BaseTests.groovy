@@ -5,7 +5,6 @@ import com.finplant.mt_remote_client.dto.mt4.*
 import com.finplant.mt_remote_client.procedures.OrderProcedures
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
-import spock.lang.Ignore
 
 import java.time.Duration
 import java.time.LocalDateTime
@@ -14,43 +13,24 @@ import java.time.ZoneOffset
 
 import static org.assertj.core.api.Assertions.assertThat
 
-class MtRemoteClientTest extends BaseSpecification {
+class BaseTests extends BaseSpecification {
+
+    @Override
+    def autoConnect() {
+        return true
+    }
 
     def "smoke"() {
         expect:
         true
     }
 
-    def "reconnect"() {
-        when:
-        client.disconnect().block(Duration.ofSeconds(10))
-        client.connect().block(Duration.ofSeconds(10))
-        client.connectToMt(MT_URL, MT_LOGIN, MT_PASSWORD, Duration.ofSeconds(10)).block()
-
-        then:
-        noExceptionThrown()
-    }
-
     def "Second connection to MT should cause an error"() {
         when:
-        client.connectToMt(MT_URL, MT_LOGIN, MT_PASSWORD, Duration.ofSeconds(10)).block()
+        client.connection().blockFirst()
 
         then:
-        thrown(Errors.MtmError)
-    }
-
-    def "Expect for MT connection status changes after disconnect/connect"() {
-
-        expect:
-        StepVerifier.create(client.remoteConnection())
-                .expectSubscription()
-                .expectNoEvent(Duration.ofSeconds(1))
-                .then { client.disconnectFromMt().block(Duration.ofSeconds(10)) }
-                .expectNext(false)
-                .then { client.connectToMt(MT_URL, MT_LOGIN, MT_PASSWORD, Duration.ofSeconds(10)).block(Duration.ofSeconds(10)) }
-                .expectNext(true)
-                .thenCancel()
-                .verify(Duration.ofSeconds(30))
+        thrown(Errors.AlreadyConnectedError)
     }
 
     def "Validate common config"() {
@@ -155,9 +135,7 @@ class MtRemoteClientTest extends BaseSpecification {
         client.config().groups().add(group1).block(Duration.ofSeconds(10))
 
         // New group is visible only after reconnect
-        client.disconnect().block(Duration.ofSeconds(10))
-        client.connect().block(Duration.ofSeconds(10))
-        client.connectToMt(MT_URL, MT_LOGIN, MT_PASSWORD, Duration.ofSeconds(10)).block()
+        reconnect()
 
         def group2 = client.config().groups().get("test").block(Duration.ofSeconds(10))
 
@@ -189,9 +167,8 @@ class MtRemoteClientTest extends BaseSpecification {
 
         client.config().groups().add(group).block(Duration.ofSeconds(10))
 
-        client.disconnect().block(Duration.ofSeconds(10))
-        client.connect().block(Duration.ofSeconds(10))
-        client.connectToMt(MT_URL, MT_LOGIN, MT_PASSWORD, Duration.ofSeconds(10)).block()
+        // group changes are visible only after reconnect
+        reconnect()
 
         when:
         client.config().groups().set(groupDisabled).block(Duration.ofSeconds(10))
@@ -540,8 +517,8 @@ class MtRemoteClientTest extends BaseSpecification {
 
         then:
         def trade = client.orders().getHistory(login,
-                LocalDateTime.of(2020, 1, 1, 0, 0, 0),
-                LocalDateTime.of(2030, 1, 1, 0, 0, 0)).blockLast()
+                                               LocalDateTime.of(2020, 1, 1, 0, 0, 0),
+                                               LocalDateTime.of(2030, 1, 1, 0, 0, 0)).blockLast()
 
         trade.order == order
         trade.profit == 0.0
@@ -834,33 +811,5 @@ class MtRemoteClientTest extends BaseSpecification {
                 }
                 .thenCancel()
                 .verify()
-    }
-
-    @Ignore("Requires manual MT server restarts")
-    def "Long connection"() {
-
-        expect:
-        sleep(1000000)
-    }
-
-    @Ignore("Works only with plugin with dummy `MtSrvManagerProtocol`")
-    def "Send external command as text"() {
-
-        expect:
-        StepVerifier.create(client.protocolExtensions().externalCommand("command!"))
-                .expectNext("resp")
-                .verifyComplete()
-    }
-
-    @Ignore("Works only with plugin with dummy `MtSrvManagerProtocol`")
-    def "Send external command as bytes"() {
-
-        given:
-        byte[] bytes = [0x01, 0x02, 0xFF]
-
-        expect:
-        StepVerifier.create(client.protocolExtensions().externalCommand(bytes))
-                .assertNext { assertThat(it).containsExactly(0x10, 0x11, 0x12) }
-                .verifyComplete()
     }
 }

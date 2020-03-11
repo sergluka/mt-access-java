@@ -1,12 +1,10 @@
 package com.finplant.mt_remote_client.procedures;
 
-import java.util.HashMap;
 import com.finplant.mt_remote_client.RpcClient;
-import com.finplant.mt_remote_client.dto.mt4.Mt4Tick;
 import lombok.val;
 import reactor.core.publisher.Mono;
 
-import java.util.Map;
+import java.util.HashMap;
 
 public class SymbolsProcedures {
     private final RpcClient client;

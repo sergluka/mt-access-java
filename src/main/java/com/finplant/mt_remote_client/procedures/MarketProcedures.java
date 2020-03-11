@@ -1,17 +1,15 @@
 package com.finplant.mt_remote_client.procedures;
 
-import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.finplant.mt_remote_client.RpcClient;
 import com.finplant.mt_remote_client.dto.mt4.Mt4Tick;
-
 import lombok.val;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.List;
 
 public class MarketProcedures {
 

@@ -11,98 +11,134 @@ import java.time.LocalDateTime;
 public class Mt4UserRecord {
 
     @JsonProperty("login")
-    Integer login;
+    private Integer login;
+
     @JsonProperty("group")
-    String group;
+    private String group;
+
     @JsonProperty("enable")
-    Boolean enable;
+    private Boolean enable;
+
     @JsonProperty("enable_change_password")
-    Boolean enableChangePassword;
+    private Boolean enableChangePassword;
+
     @JsonProperty("read_only")
-    Boolean readOnly;
+    private Boolean readOnly;
+
     @JsonProperty("enable_otp")
-    Boolean enableOtp;
+    private Boolean enableOtp;
+
     @JsonProperty("password_phone")
-    String passwordPhone;
+    private String passwordPhone;
+
     @JsonProperty("name")
-    String name;
+    private String name;
+
     @JsonProperty("country")
-    String country;
+    private String country;
+
     @JsonProperty("city")
-    String city;
+    private String city;
+
     @JsonProperty("state")
-    String state;
+    private String state;
+
     @JsonProperty("zipcode")
-    String zipcode;
+    private String zipcode;
+
     @JsonProperty("address")
-    String address;
+    private String address;
+
     @JsonProperty("lead_source")
-    String leadSource;
+    private String leadSource;
+
     @JsonProperty("phone")
-    String phone;
+    private String phone;
+
     @JsonProperty("email")
-    String email;
+    private String email;
+
     @JsonProperty("comment")
-    String comment;
+    private String comment;
+
     @JsonProperty("id")
-    String id;
+    private String id;
+
     @JsonProperty("status")
-    String status;
+    private String status;
+
     @JsonProperty("leverage")
-    Integer leverage;
+    private Integer leverage;
+
     @JsonProperty("agent_account")
-    Integer agentAccount;
+    private Integer agentAccount;
+
     @JsonProperty("taxes")
-    BigDecimal taxes;
+    private BigDecimal taxes;
+
     @JsonProperty("send_reports")
-    Boolean sendReports;
+    private Boolean sendReports;
+
     @JsonProperty("mqid")
-    Integer mqid;
+    private Integer mqid;
+
     @JsonProperty("user_color")
-    Long userColor;
+    private Long userColor;
+
     @JsonProperty("api_data")
-    byte[] apiData;
+    private byte[] apiData;
 
     @Setter
     @JsonProperty("password")
-    String password;
+    private String password;
+
     @Setter
     @JsonProperty("password_investor")
-    String passwordInvestor;
+    private String passwordInvestor;
 
     @Getter
     @JsonProperty("last_date")
-    LocalDateTime lastDate;
+    private LocalDateTime lastDate;
+
     @Getter
     @JsonProperty("reg_date")
-    LocalDateTime registrationDate;
+    private LocalDateTime registrationDate;
+
     @Getter
     @JsonProperty("timestamp")
-    LocalDateTime timestamp;
+    private LocalDateTime timestamp;
+
     @Getter
     @JsonProperty("last_ip")
-    String lastIp;
+    private String lastIp;
+
     @Getter
     @JsonProperty("prev_month_balance")
-    BigDecimal prevMonthBalance;
+    private BigDecimal prevMonthBalance;
+
     @Getter
     @JsonProperty("prev_day_balance")
-    BigDecimal prevDayBalance;
+    private BigDecimal prevDayBalance;
+
     @Getter
     @JsonProperty("prev_month_equity")
-    BigDecimal prevMonthEquity;
+    private BigDecimal prevMonthEquity;
+
     @Getter
     @JsonProperty("prev_day_equity")
-    BigDecimal prevDayEquity;
+    private BigDecimal prevDayEquity;
+
     @Getter
     @JsonProperty("interestrate")
-    BigDecimal interestrate;
+    private BigDecimal interestrate;
+
     @Getter
     @JsonProperty("balance")
-    BigDecimal balance;
+    private BigDecimal balance;
+
     @Getter
     @JsonProperty("credit")
-    BigDecimal credit;
+    private BigDecimal credit;
 
     @Builder(toBuilder = true)
     public Mt4UserRecord(Integer login, String group, Boolean enable, Boolean enableChangePassword, Boolean readOnly,

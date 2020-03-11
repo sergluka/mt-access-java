@@ -1,28 +1,20 @@
 package com.finplant.mt_remote_client;
 
+import com.finplant.mt_remote_client.procedures.*;
+import lombok.Builder;
+import lombok.Value;
+import lombok.val;
+import reactor.core.publisher.Flux;
+
 import java.io.InputStream;
 import java.net.URI;
-import java.time.Duration;
+import java.util.HashMap;
 
-import com.finplant.mt_remote_client.dto.internal.Registration;
-import com.finplant.mt_remote_client.procedures.ConfigProcedures;
-import com.finplant.mt_remote_client.procedures.DealingProcedures;
-import com.finplant.mt_remote_client.procedures.MarketProcedures;
-import com.finplant.mt_remote_client.procedures.OrderProcedures;
-import com.finplant.mt_remote_client.procedures.ProtocolExtensionsProcedures;
-import com.finplant.mt_remote_client.procedures.SymbolsProcedures;
-import com.finplant.mt_remote_client.procedures.UsersProcedures;
+public class MtRemoteClient {
 
-import lombok.val;
-import reactor.core.Disposable;
-import reactor.core.Disposables;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-import reactor.util.annotation.NonNull;
-
-public class MtRemoteClient implements AutoCloseable {
-
-    private final Disposable.Composite disposables = Disposables.composite();
+    private static final String HEADER_MT_SERVER = "MT-SERVER";
+    private static final String HEADER_MT_LOGIN = "MT-LOGIN";
+    private static final String HEADER_MT_PASSWORD = "MT-PASSWORD";
 
     private final RpcClient client;
     private final ConfigProcedures configProcedures;
@@ -33,10 +25,10 @@ public class MtRemoteClient implements AutoCloseable {
     private final DealingProcedures dealingProcedures;
 
     private final OrderProcedures orderProcedure;
-    private final URI uri;
+    private final ConnectionParameters parameters;
 
-    private MtRemoteClient(WsClient wsClient, URI uri) {
-        this.uri = uri;
+    private MtRemoteClient(WsClient wsClient, ConnectionParameters params) {
+        this.parameters = params;
 
         client = new RpcClient(wsClient);
         configProcedures = new ConfigProcedures(client);
@@ -48,46 +40,25 @@ public class MtRemoteClient implements AutoCloseable {
         dealingProcedures = new DealingProcedures(client);
     }
 
-    static public MtRemoteClient create(URI uri) {
-        return new MtRemoteClient(new WsClient(), uri);
+    @SuppressWarnings("unused")
+    public static MtRemoteClient create(ConnectionParameters parameters) {
+        return new MtRemoteClient(new WsClient(), parameters);
     }
 
-    static public MtRemoteClient createSecure(URI uri,
+    @SuppressWarnings("unused")
+    public static MtRemoteClient createSecure(ConnectionParameters parameters,
                                               InputStream keystoreStream, String keystorePassword,
                                               boolean hostnameVerification) {
-        return new MtRemoteClient(new WsClient(keystoreStream, keystorePassword, hostnameVerification), uri);
+        return new MtRemoteClient(new WsClient(keystoreStream, keystorePassword, hostnameVerification), parameters);
     }
 
-    @Override
-    public void close() {
-        disposables.dispose();
-    }
+    public Flux<Boolean> connection() {
+        val headers = new HashMap<String, String>();
+        headers.put(HEADER_MT_SERVER, parameters.getServer());
+        headers.put(HEADER_MT_LOGIN, parameters.getLogin().toString());
+        headers.put(HEADER_MT_PASSWORD, parameters.getPassword());
 
-    public Mono<Void> connect() {
-        return client.connect(uri);
-    }
-
-    public Flux<Boolean> localConnection() {
-        return client.connection();
-    }
-
-    public Flux<Boolean> remoteConnection() {
-        return client.subscribe("connection", Boolean.class);
-    }
-
-    public Mono<Void> disconnect() {
-        return client.disconnect();
-    }
-
-    public Mono<Void> connectToMt(@NonNull String server, @NonNull Integer login, @NonNull String password,
-                                  @NonNull Duration reconnectDelay) {
-
-        val params = new Registration(server, login, password, reconnectDelay);
-        return client.call("connect", params);
-    }
-
-    public Mono<Void> disconnectFromMt() {
-        return client.call("disconnect");
+        return client.connection(parameters.uri, headers);
     }
 
     public ConfigProcedures config() {
@@ -116,5 +87,14 @@ public class MtRemoteClient implements AutoCloseable {
 
     public ProtocolExtensionsProcedures protocolExtensions() {
         return protocolExtensionsProcedures;
+    }
+
+    @Value
+    @Builder
+    public static class ConnectionParameters {
+        private final URI uri;
+        private final String server;
+        private final Integer login;
+        private final String password;
     }
 }
