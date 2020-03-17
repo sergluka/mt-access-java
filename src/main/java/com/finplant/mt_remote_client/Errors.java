@@ -16,13 +16,19 @@ public class Errors {
 
     public static class ConnectionError extends RuntimeException {
         public ConnectionError(Throwable cause) {
-            super("Connection error", cause);
+            super("Cannot connect", cause);
         }
     }
 
     public static class ConnectionLostError extends RuntimeException {
         public ConnectionLostError(int statusCode, String reason) {
             super(String.format("Connection lost. code: %d, reason: %s", statusCode, reason));
+        }
+    }
+
+    public static class ConnectionIsDisposed extends RuntimeException {
+        public ConnectionIsDisposed() {
+            super("Connection is disposed");
         }
     }
 }

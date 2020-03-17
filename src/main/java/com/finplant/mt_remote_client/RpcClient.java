@@ -17,12 +17,14 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import reactor.core.Disposable;
+import reactor.core.publisher.EmitterProcessor;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.FluxSink;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.MonoSink;
+import reactor.core.publisher.MonoProcessor;
+import reactor.core.scheduler.Schedulers;
 
 import java.net.URI;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.time.ZoneOffset;
@@ -33,10 +35,12 @@ import java.util.concurrent.atomic.AtomicLong;
 @Slf4j
 public class RpcClient implements AutoCloseable {
 
+    private static final int UNSUBSCRIBE_DELAY_S = 10;
+
     private final WsClient client;
 
-    private final Map<Long, MonoSink<JsonNode>> requests = new ConcurrentHashMap<>();
-    private final Map<String, FluxSink<JsonNode>> subscriptions = new ConcurrentHashMap<>();
+    private final Map<Long, MonoProcessor<JsonNode>> requests = new ConcurrentHashMap<>();
+    private final Map<String, EmitterProcessor<JsonNode>> subscriptions = new ConcurrentHashMap<>();
 
     private final ObjectMapper mapper = new ObjectMapper();
     private final AtomicLong idCounter = new AtomicLong(0);
@@ -109,26 +113,26 @@ public class RpcClient implements AutoCloseable {
 
         log.trace("Cleanup");
 
-        requests.values().forEach(MonoSink::success);
+        requests.values().forEach(sink -> sink.onError(new Errors.ConnectionIsDisposed()));
         requests.clear();
-        subscriptions.values().forEach(FluxSink::complete);
+        subscriptions.values().forEach(sink -> sink.onError(new Errors.ConnectionIsDisposed()));
         subscriptions.clear();
     }
 
     private <T> Mono<JsonNode> doCall(String method, T payload) {
 
+        long id = idCounter.getAndIncrement();
+
         return Mono.defer(() -> {
 
-            long id = idCounter.getAndIncrement();
+            MonoProcessor<JsonNode> emitter = MonoProcessor.create();
+            requests.put(id, emitter);
+
             val json = makeJson(method, payload, id);
+            return client.send(json).then(emitter);
 
-            val storeRequest = Mono.<JsonNode>create(sink -> {
-                requests.put(id, sink);
-                sink.onDispose(() -> requests.remove(id));
-            });
-
-            return storeRequest.delaySubscription(client.send(json));
-        });
+        }).subscribeOn(Schedulers.newSingle("sender"))
+                   .doFinally(signal -> requests.remove(id));
     }
 
     private Flux<JsonNode> doSubscription(String name) {
@@ -136,23 +140,23 @@ public class RpcClient implements AutoCloseable {
         return Flux.defer(() -> {
 
             val subscribeRequest = call("subscribe", new Subscription(name));
-            val unSubscribeRequest = call("unsubscribe", new Subscription(name));
 
-            val storeSubscription = Flux.<JsonNode>create(sink -> {
-                val oldSink = subscriptions.put(name, sink);
-                if (oldSink != null) {
-                    sink.error(new Exception("Subscription already exists"));
-                    return;
-                }
+            EmitterProcessor<JsonNode> emitter = EmitterProcessor.create();
+            val oldSink = subscriptions.putIfAbsent(name, emitter);
+            if (oldSink != null) {
+                return Flux.error(new Exception(String.format("Subscription to '%s' already exists", name)));
+            }
 
-                sink.onDispose(() -> {
-                    unSubscribeRequest.subscribe();
-                    subscriptions.remove(name);
-                });
-            });
-
-            return storeSubscription.delaySubscription(subscribeRequest);
+            return subscribeRequest.thenMany(emitter)
+                                   .doOnCancel(() -> unsubscribe(name))
+                                   .doFinally(signal -> subscriptions.remove(name));
         });
+    }
+
+    private void unsubscribe(String name) {
+        call("unsubscribe", new Subscription(name))
+                .timeout(Duration.ofSeconds(UNSUBSCRIBE_DELAY_S))
+                .subscribe();
     }
 
     @SneakyThrows
@@ -194,7 +198,7 @@ public class RpcClient implements AutoCloseable {
         }
 
         val data = json.get("data");
-        sink.next(data);
+        sink.onNext(data);
 
         return true;
     }
@@ -216,21 +220,22 @@ public class RpcClient implements AutoCloseable {
 
             val message = json.get("message");
             if (message == null) {
-                request.error(new Errors.MtmError("Missing 'message' in error response"));
+                request.onError(new Errors.MtmError("Missing 'message' in error response"));
                 return;
             }
 
-            request.error(new Errors.MtmError(message.asText()));
+            request.onError(new Errors.MtmError(message.asText()));
             return;
         }
 
         val result = json.get("result");
         if (result == null) {
-            request.success();
+            request.onComplete();
             return;
         }
 
-        request.success(result);
+        request.onNext(result);
+        request.onComplete();
     }
 
     @SneakyThrows
