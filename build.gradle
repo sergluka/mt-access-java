@@ -2,7 +2,8 @@ plugins {
     id 'java-library'
     id 'groovy'
     id 'checkstyle'
-
+    id 'maven-publish'
+    
     id 'com.github.johnrengelman.shadow' version '5.1.0'
     id 'org.unbroken-dome.test-sets' version '2.2.1'
 }
@@ -14,7 +15,8 @@ repositories {
 
 sourceCompatibility = 1.8
 
-version = 0.1
+group = 'com.finplant.mt_remote'
+version = '1.0.0'
 
 dependencies {
     compileOnly 'org.projectlombok:lombok:1.18.10'
@@ -43,7 +45,7 @@ jar {
 }
 
 shadowJar {
-    archiveBaseName.set('mt-remote-client')
+    archiveBaseName.set('mt-remote')
     archiveClassifier.set(null)
 }
 
@@ -56,4 +58,22 @@ checkstyle {
 
 testSets {
     integrationTest { dirName = 'test-integration' }
+}
+
+publishing {
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/SergeyLukashevich/mt-remote-java")
+            credentials {
+                username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_USERNAME")
+                password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
+    publications {
+        gpr(MavenPublication) {
+            from(components.java)
+        }
+    }
 }

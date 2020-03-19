@@ -1,3 +1,5 @@
+![Gradle Package](https://github.com/SergeyLukashevich/mt-remote-java/workflows/Gradle%20Package/badge.svg)
+
 Reactive Java client for the [MT Remote](https://sergeylukashevich.github.io/mt-remote-doc) API.
 
 ## MT Remote
