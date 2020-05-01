@@ -14,7 +14,7 @@ Client is written on Java 8 based on [Project Reactor](https://projectreactor.io
 ## Blocking connect / disconnect
 
 ```java
-import com.finplant.mt_remote_client.MtRemoteClient;
+import com.finplant.mt_remote.MtRemoteClient;
 
 var params = MtRemoteClient.ConnectionParameters.builder()
         .uri(URI.create("wss://localhost:8080"))

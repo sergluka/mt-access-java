@@ -9,6 +9,6 @@
         <appender-ref ref="STDOUT"/>
     </root>
 
-    <logger name="org.eclipse.jetty" level="INFO"/>
+    <logger name="org.java_websocket" level="DEBUG"/>
 
 </configuration>
