@@ -13,7 +13,7 @@ plugins {
     id 'groovy'
     id 'checkstyle'
     id 'maven-publish'
-
+    
     id 'com.github.johnrengelman.shadow' version "${shadowVersion}"
     id 'org.unbroken-dome.test-sets' version "${testSetsVersion}"
 }
