@@ -20,6 +20,7 @@ plugins {
     id 'com.github.johnrengelman.shadow' version "${shadowVersion}"
     id 'org.unbroken-dome.test-sets' version "${testSetsVersion}"
     id 'com.jfrog.bintray' version "${bintrayVersion}"
+    id "com.jfrog.artifactory" version "4.15.2"
 }
 
 repositories {
@@ -30,7 +31,7 @@ repositories {
 sourceCompatibility = 1.8
 
 group = 'lv.sergluka.mt_access'
-version = '1.0.0'
+version = '1.0.0-SNAPSHOT'
 
 dependencies {
     api "io.projectreactor:reactor-core:${reactorVersion}"
@@ -166,5 +167,22 @@ bintray {
     }
 }
 
-
-
+artifactory {
+    contextUrl = 'http://oss.jfrog.org'
+    publish {
+        repository {
+            repoKey = 'oss-snapshot-local'
+            username = System.getProperty('bintray.user')
+            password = System.getProperty('bintray.key')
+        }
+        defaults {
+            publications('mavenPublication')
+            publishArtifacts = true
+            publishPom = true
+        }
+    }
+    resolve {
+        repoKey = 'jcenter'
+    }
+//    clientConfig.info.setBuildNumber(System.getProperty('build.number'))
+}

@@ -1,3 +1,5 @@
+[ ![Download](https://api.bintray.com/packages/sergluka/maven/mt-access/images/download.svg?version=1.0.0) ](https://bintray.com/sergluka/maven/mt-access/1.0.0/link)
+
 Reactive Java client for the [MT Access](https://sergeylukashevich.github.io/mt-access-doc) API.
 
 ## MT Access
