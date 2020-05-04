@@ -7,7 +7,7 @@ buildscript {
         reactorVersion = '3.3.5.RELEASE'
         websocketVersion = '1.4.1'
 
-        codeUrl = 'https://github.com/SergeyLukashevich/mt-remote-java'
+        codeUrl = 'https://github.com/SergeyLukashevich/mt-access-java'
     }
 }
 
@@ -29,8 +29,8 @@ repositories {
 
 sourceCompatibility = 1.8
 
-group = 'lv.sergluka.mt_remote'
-version = '1.0.0-SNAPSHOT'
+group = 'lv.sergluka.mt_access'
+version = '1.0.0'
 
 dependencies {
     api "io.projectreactor:reactor-core:${reactorVersion}"
@@ -58,14 +58,14 @@ tasks.withType(JavaCompile) {
 
 jar {
     manifest {
-        attributes 'Implementation-Title': 'Java client for MT Remote',
+        attributes 'Implementation-Title': 'Java client for MT Access',
                    'Implementation-Version': archiveVersion.getOrNull(),
                    'Main-Class': project.group + '.Main'
     }
 }
 
 shadowJar {
-    archiveBaseName.set('mt-remote')
+    archiveBaseName.set('mt-access')
     archiveClassifier.set(null)
 }
 
@@ -127,8 +127,8 @@ publishing {
     publications {
         shadow(MavenPublication) { publication ->
 
-            groupId = 'lv.sergluka.mt-remote'
-            artifactId = 'mt-remote'
+            groupId = 'lv.sergluka.mt-access'
+            artifactId = 'mt-access'
 
             project.shadow.component(publication)
             artifact sourcesJar {
@@ -140,8 +140,8 @@ publishing {
 
             pom.withXml {
                 def root = asNode()
-                root.appendNode('description', 'Reactive Java client for the MT Remote')
-                root.appendNode('name', 'MT Remote Java library')
+                root.appendNode('description', 'Reactive Java client for the MT Access')
+                root.appendNode('name', 'MT Access Java library')
                 root.appendNode('url', "${codeUrl}")
                 root.children().last() + pomConfig
             }
@@ -156,8 +156,8 @@ bintray {
     publications = ['shadow']
 
     pkg {
-        repo = 'mt-remote-java'
-        name = 'mt-remote-java'
+        repo = 'maven'
+        name = 'mt-access'
         version {
             name = project.version
             desc = project.version
