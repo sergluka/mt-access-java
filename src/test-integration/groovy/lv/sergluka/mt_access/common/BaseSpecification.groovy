@@ -48,7 +48,7 @@ abstract class BaseSpecification extends Specification {
     def createClient(MtAccessClient.ConnectionParameters newParams) {
         return MtAccessClient.create(newParams,
                                      BaseSpecification.classLoader.getResourceAsStream("keystore.jks"),
-                                     KEYSTORE_PASSWORD, true)
+                                     KEYSTORE_PASSWORD)
     }
 
     def setupSpec() {

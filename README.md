@@ -1,4 +1,4 @@
-[ ![Download](https://api.bintray.com/packages/sergluka/maven/mt-access/images/download.svg?version=1.0.0) ](https://bintray.com/sergluka/maven/mt-access/1.0.0/link)
+[ ![Download](https://api.bintray.com/packages/sergluka/maven/mt-access/images/download.svg) ](https://bintray.com/sergluka/maven/mt-access/1.0.0/link)
 
 Reactive Java client for the [MT Access](https://sergeylukashevich.github.io/mt-access-doc) API.
 
@@ -20,6 +20,8 @@ the most known Forex trading plaform. If you are interested, please [contact](ma
         }
 
 ### Snapshots
+
+See the snapshots list [here](https://oss.jfrog.org/artifactory/oss-snapshot-local/lv/sergluka/mt-access/mt-access/)
 
         repositories {
             maven { url 'https://oss.jfrog.org/artifactory/oss-snapshot-local' }
