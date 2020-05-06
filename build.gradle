@@ -1,10 +1,14 @@
 buildscript {
     ext {
         shadowVersion = '5.1.0'
+        bintrayVersion = '1.8.5'
+        artifactoryVersion = '4.15.2'
         testSetsVersion = '2.2.1'
         lombokVersion = '1.18.10'
         reactorVersion = '3.3.5.RELEASE'
         websocketVersion = '1.4.1'
+
+        codeUrl = 'https://github.com/SergeyLukashevich/mt-access-java'
     }
 }
 
@@ -13,9 +17,11 @@ plugins {
     id 'groovy'
     id 'checkstyle'
     id 'maven-publish'
-    
+
     id 'com.github.johnrengelman.shadow' version "${shadowVersion}"
     id 'org.unbroken-dome.test-sets' version "${testSetsVersion}"
+    id 'com.jfrog.bintray' version "${bintrayVersion}"
+    id 'com.jfrog.artifactory' version "${artifactoryVersion}"
 }
 
 repositories {
@@ -25,8 +31,8 @@ repositories {
 
 sourceCompatibility = 1.8
 
-group = 'com.finplant.mt_remote'
-version = '1.0.1'
+group = 'lv.sergluka.mt_access'
+version = '1.0.0-SNAPSHOT'
 
 dependencies {
     api "io.projectreactor:reactor-core:${reactorVersion}"
@@ -47,6 +53,11 @@ dependencies {
     checkstyle('com.github.sevntu-checkstyle:sevntu-checks:1.32.0')
 }
 
+ext {
+    projectName = 'mt-access'
+    isSnapshot = version.endsWith('SNAPSHOT')
+}
+
 tasks.withType(JavaCompile) {
     options.compilerArgs << '-Xlint:unchecked'
     options.deprecation = true
@@ -54,14 +65,14 @@ tasks.withType(JavaCompile) {
 
 jar {
     manifest {
-        attributes 'Implementation-Title': 'Java client for MT Remote',
+        attributes 'Implementation-Title': 'Java client for MT Access',
                    'Implementation-Version': archiveVersion.getOrNull(),
                    'Main-Class': project.group + '.Main'
     }
 }
 
 shadowJar {
-    archiveBaseName.set('mt-remote')
+    archiveBaseName.set(projectName)
     archiveClassifier.set(null)
 }
 
@@ -70,6 +81,12 @@ checkstyle {
     configFile = new File("checkstyle.xml")
     maxWarnings = 0
     ignoreFailures = false
+}
+
+test {
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
 }
 
 testSets {
@@ -82,18 +99,119 @@ integrationTest {
     exclude '**/manual/*Tests.groovy'
 }
 
-task sourceJar(type: Jar) {
+task sourcesJar(type: Jar) {
     classifier 'sources'
     from sourceSets.main.allJava
+}
+
+javadoc.failOnError = false
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
+}
+
+def pomConfig = {
+    licenses {
+        license {
+            name 'MIT License'
+            url 'http://www.opensource.org/licenses/mit-license.php'
+            distribution "repo"
+        }
+    }
+    developers {
+        developer {
+            id "sergluka"
+            name "Sergey Lukashevich"
+            email "sergey.lukashevi4@gmail.com"
+        }
+    }
+
+    scm {
+        url "${codeUrl}"
+    }
 }
 
 publishing {
     publications {
         shadow(MavenPublication) { publication ->
+
+            groupId = 'lv.sergluka.mt-access'
+            artifactId = projectName
+
             project.shadow.component(publication)
-            artifact tasks.sourceJar
-            groupId = 'com.finplant.mt-remote'
-            artifactId = 'mt-remote'
+            artifact sourcesJar {
+                classifier "sources"
+            }
+            artifact javadocJar {
+                classifier "javadoc"
+            }
+
+            pom.withXml {
+                def root = asNode()
+                root.appendNode('description', 'Reactive Java client for the MT Access')
+                root.appendNode('name', 'MT Access Java library')
+                root.appendNode('url', "${codeUrl}")
+                root.children().last() + pomConfig
+            }
+        }
+    }
+}
+
+bintray {
+    user = project.findProperty("bintray.user")
+    key = project.findProperty("bintray.key")
+
+    publications = ['shadow']
+
+    pkg {
+        repo = 'maven'
+        name = projectName
+        version {
+            name = project.version
+            desc = project.version
+            released = new Date()
+        }
+    }
+}
+
+artifactory {
+
+    contextUrl = 'https://oss.jfrog.org'
+    publish {
+        repository {
+            repoKey = 'oss-snapshot-local'
+            username = project.findProperty('bintray.user')
+            password = project.findProperty('bintray.key')
+        }
+        defaults {
+            publications 'shadow'
+            publishArtifacts = true
+            publishPom = true
+        }
+    }
+    resolve {
+        repoKey = 'jcenter'
+    }
+    clientConfig.info.setBuildNumber('' + System.currentTimeMillis())
+}
+
+bintrayPublish { task ->
+    doFirst {
+        if (isSnapshot) {
+            throw new GradleException('Cannot publish SNAPSHOT versions to Bintray')
+        }
+    }
+}
+
+artifactoryPublish { task ->
+    doFirst {
+        if (!isSnapshot) {
+            throw new GradleException('Cannot publish non-SNAPSHOT versions to OJO')
         }
     }
 }

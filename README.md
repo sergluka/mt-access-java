@@ -1,11 +1,33 @@
-![Gradle Package](https://github.com/SergeyLukashevich/mt-remote-java/workflows/Gradle%20Package/badge.svg)
+[ ![Download](https://api.bintray.com/packages/sergluka/maven/mt-access/images/download.svg?version=1.0.0) ](https://bintray.com/sergluka/maven/mt-access/1.0.0/link)
 
-Reactive Java client for the [MT Remote](https://sergeylukashevich.github.io/mt-remote-doc) API.
+Reactive Java client for the [MT Access](https://sergeylukashevich.github.io/mt-access-doc) API.
 
-## MT Remote
+## MT Access
 
-MT Remote is a service that allows easy access to [MT4 server](https://www.metatrader4.com/en/brokers/api) 
-the most known Forex trading plaform. If you are interested, please [contact](mailto:sergey.lukashevich@finplant.com?subject=MT%20Remote)
+MT Access is a service that allows easy access to [MT4 server](https://www.metatrader4.com/en/brokers/api) 
+the most known Forex trading plaform. If you are interested, please [contact](mailto:sergey.lukashevich@finplant.com?subject=MT%20Access)
+
+## Installation
+
+### Releases
+
+        repositories {
+            jCenter()
+        }
+        
+        dependencies {
+            implementation 'lv.sergluka.mt-access:mt-access:<latest-version>'
+        }
+
+### Snapshots
+
+        repositories {
+            maven { url 'https://oss.jfrog.org/artifactory/oss-snapshot-local' }
+        }
+        
+        dependencies {
+            implementation 'lv.sergluka.mt-access:mt-access:x.x.x-SNAPSHOT'
+        }
 
 ## Details
 
@@ -16,17 +38,17 @@ Client is written on Java 8 based on [Project Reactor](https://projectreactor.io
 ## Blocking connect / disconnect
 
 ```java
-import com.finplant.mt_remote.MtRemoteClient;
+import com.finplant.mt_access.MtAccessClient;
 
-var params = MtRemoteClient.ConnectionParameters.builder()
+var params = MtAccessClient.ConnectionParameters.builder()
         .uri(URI.create("wss://localhost:8080"))
         .server("127.0.0.1")
         .login(1)
         .password("password")
         .build();
 
-MtRemoteClient client = 
-        MtRemoteClient.createSecure(params,
+MtAccessClient client = 
+        MtAccessClient.createSecure(params,
                                     BaseSpecification.classLoader.getResourceAsStream("keystore.jks"),
                                     "keystore password", true);
 
@@ -122,6 +144,6 @@ client.dealing().listen().subscribe(request -> {
 
 ```
 
-See more samples in [tests](src/test-integration/groovy/com/finplant/mt_remote_client/) 
+See more samples in [tests](src/test-integration/groovy/com/finplant/mt_access_client/) 
 
 
