@@ -7,6 +7,28 @@ Reactive Java client for the [MT Access](https://sergeylukashevich.github.io/mt-
 MT Access is a service that allows easy access to [MT4 server](https://www.metatrader4.com/en/brokers/api) 
 the most known Forex trading plaform. If you are interested, please [contact](mailto:sergey.lukashevich@finplant.com?subject=MT%20Access)
 
+## Installation
+
+### Releases
+
+        repositories {
+            jCenter()
+        }
+        
+        dependencies {
+            implementation 'lv.sergluka.mt-access:mt-access:<latest-version>'
+        }
+
+### Snapshots
+
+        repositories {
+            maven { url 'https://oss.jfrog.org/artifactory/oss-snapshot-local' }
+        }
+        
+        dependencies {
+            implementation 'lv.sergluka.mt-access:mt-access:x.x.x-SNAPSHOT'
+        }
+
 ## Details
 
 Client is written on Java 8 based on [Project Reactor](https://projectreactor.io/)

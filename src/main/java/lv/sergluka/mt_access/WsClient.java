@@ -22,8 +22,8 @@ class WsClient implements AutoCloseable {
 
     private WsClientImpl implementation;
 
-    WsClient(InputStream keystoreStream, String keystorePassword, boolean hostnameVerification) {
-        sslSockerFactory = createSslContextFactory(keystoreStream, keystorePassword, hostnameVerification);
+    WsClient(InputStream keystoreStream, String keystorePassword) {
+        sslSockerFactory = createSslContextFactory(keystoreStream, keystorePassword);
     }
 
     WsClient() {
@@ -39,8 +39,7 @@ class WsClient implements AutoCloseable {
     }
 
     @SneakyThrows
-    private SSLSocketFactory createSslContextFactory(InputStream keystoreStream, String keystorePassword,
-                                                     boolean hostnameVerification) {
+    private SSLSocketFactory createSslContextFactory(InputStream keystoreStream, String keystorePassword) {
 
         val keystore = KeyStore.getInstance(KeyStore.getDefaultType());
 

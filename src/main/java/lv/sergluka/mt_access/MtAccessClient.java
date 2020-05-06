@@ -37,9 +37,8 @@ public class MtAccessClient implements AutoCloseable {
     @SuppressWarnings("unused")
     public static MtAccessClient create(@NonNull ConnectionParameters parameters,
                                         @NonNull InputStream keystoreStream,
-                                        @NonNull String keystorePassword,
-                                        boolean hostnameVerification) {
-        return new MtAccessClient(new WsClient(keystoreStream, keystorePassword, hostnameVerification), parameters);
+                                        @NonNull String keystorePassword) {
+        return new MtAccessClient(new WsClient(keystoreStream, keystorePassword), parameters);
     }
 
     public Flux<MtAccessClient> connection() {

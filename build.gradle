@@ -2,6 +2,7 @@ buildscript {
     ext {
         shadowVersion = '5.1.0'
         bintrayVersion = '1.8.5'
+        artifactoryVersion = '4.15.2'
         testSetsVersion = '2.2.1'
         lombokVersion = '1.18.10'
         reactorVersion = '3.3.5.RELEASE'
@@ -16,11 +17,11 @@ plugins {
     id 'groovy'
     id 'checkstyle'
     id 'maven-publish'
-    
+
     id 'com.github.johnrengelman.shadow' version "${shadowVersion}"
     id 'org.unbroken-dome.test-sets' version "${testSetsVersion}"
     id 'com.jfrog.bintray' version "${bintrayVersion}"
-    id "com.jfrog.artifactory" version "4.15.2"
+    id 'com.jfrog.artifactory' version "${artifactoryVersion}"
 }
 
 repositories {
@@ -52,6 +53,11 @@ dependencies {
     checkstyle('com.github.sevntu-checkstyle:sevntu-checks:1.32.0')
 }
 
+ext {
+    projectName = 'mt-access'
+    isSnapshot = version.endsWith('SNAPSHOT')
+}
+
 tasks.withType(JavaCompile) {
     options.compilerArgs << '-Xlint:unchecked'
     options.deprecation = true
@@ -66,7 +72,7 @@ jar {
 }
 
 shadowJar {
-    archiveBaseName.set('mt-access')
+    archiveBaseName.set(projectName)
     archiveClassifier.set(null)
 }
 
@@ -75,6 +81,12 @@ checkstyle {
     configFile = new File("checkstyle.xml")
     maxWarnings = 0
     ignoreFailures = false
+}
+
+test {
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
 }
 
 testSets {
@@ -129,7 +141,7 @@ publishing {
         shadow(MavenPublication) { publication ->
 
             groupId = 'lv.sergluka.mt-access'
-            artifactId = 'mt-access'
+            artifactId = projectName
 
             project.shadow.component(publication)
             artifact sourcesJar {
@@ -158,25 +170,26 @@ bintray {
 
     pkg {
         repo = 'maven'
-        name = 'mt-access'
+        name = projectName
         version {
             name = project.version
             desc = project.version
-            released  = new Date()
+            released = new Date()
         }
     }
 }
 
 artifactory {
-    contextUrl = 'http://oss.jfrog.org'
+
+    contextUrl = 'https://oss.jfrog.org'
     publish {
         repository {
             repoKey = 'oss-snapshot-local'
-            username = System.getProperty('bintray.user')
-            password = System.getProperty('bintray.key')
+            username = project.findProperty('bintray.user')
+            password = project.findProperty('bintray.key')
         }
         defaults {
-            publications('mavenPublication')
+            publications 'shadow'
             publishArtifacts = true
             publishPom = true
         }
@@ -184,5 +197,21 @@ artifactory {
     resolve {
         repoKey = 'jcenter'
     }
-//    clientConfig.info.setBuildNumber(System.getProperty('build.number'))
+    clientConfig.info.setBuildNumber('' + System.currentTimeMillis())
+}
+
+bintrayPublish { task ->
+    doFirst {
+        if (isSnapshot) {
+            throw new GradleException('Cannot publish SNAPSHOT versions to Bintray')
+        }
+    }
+}
+
+artifactoryPublish { task ->
+    doFirst {
+        if (!isSnapshot) {
+            throw new GradleException('Cannot publish non-SNAPSHOT versions to OJO')
+        }
+    }
 }
