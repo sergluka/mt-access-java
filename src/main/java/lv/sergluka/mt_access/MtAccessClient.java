@@ -19,9 +19,12 @@ import reactor.core.publisher.Flux;
 @Slf4j
 public class MtAccessClient implements AutoCloseable {
 
+    private static final String PROTOCOL_VERSION = "1.00";
+
     private static final String HEADER_MT_SERVER = "MT-SERVER";
     private static final String HEADER_MT_LOGIN = "MT-LOGIN";
     private static final String HEADER_MT_PASSWORD = "MT-PASSWORD";
+    private static final String HEADER_PROTO_VERSION = "VERSION";
 
     private final RpcClient client;
     private final ConfigProcedures configProcedures;
@@ -50,6 +53,7 @@ public class MtAccessClient implements AutoCloseable {
             headers.put(HEADER_MT_SERVER, parameters.getServer());
             headers.put(HEADER_MT_LOGIN, parameters.getLogin().toString());
             headers.put(HEADER_MT_PASSWORD, parameters.getPassword());
+            headers.put(HEADER_PROTO_VERSION, PROTOCOL_VERSION);
 
             log.info("Connecting to {} as {} via {}", parameters.getServer(), parameters.getLogin(), parameters.uri);
             return client.connection(parameters.uri, headers).map(unused -> this);
