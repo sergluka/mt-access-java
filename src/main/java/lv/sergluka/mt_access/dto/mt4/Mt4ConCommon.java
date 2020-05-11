@@ -8,12 +8,10 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-@Data
+@Getter
+@ToString
 @NoArgsConstructor
 public class Mt4ConCommon {
 
@@ -52,143 +50,171 @@ public class Mt4ConCommon {
         LIVEUPDATE
     }
 
-    @Getter
     @JsonProperty("adapters")
     private String adapters;
 
-    @Getter
     @JsonProperty("optimization_last_time")
     private LocalDateTime optimizationLastTime;
 
-    @Getter
     @JsonProperty("server_version")
     private Integer serverVersion;
 
-    @Getter
     @JsonProperty("server_build")
     private Integer serverBuild;
 
-    @Getter
     @JsonProperty("last_order")
     private Integer lastOrder;
 
-    @Getter
     @JsonProperty("last_login")
     private Integer lastLogin;
 
-    @Getter
     @JsonProperty("lost_commission_login")
     private Integer lostCommissionLogin;
 
-    @Getter
     @JsonProperty("owner")
     private String owner;
 
+    @Setter
     @JsonProperty("name")
     private String name;
 
+    @Setter
     @JsonProperty("address")
     private String address;
 
+    @Setter
     @JsonProperty("port")
     private Integer port;
 
+    @Setter
     @JsonProperty("timeout")
     private Integer timeout;
 
+    @Setter
     @JsonProperty("type_of_demo")
     private TypeOfDemo typeOfDemo;
 
+    @Setter
     @JsonProperty("time_of_demo_days")
     private Integer timeOfDemoDays;
 
+    @Setter
     @JsonProperty("daylight_correction")
     private Boolean daylightCorrection;
 
+    @Setter
     @JsonProperty("timezone")
     private ZoneOffset timezone;
 
+    @Setter
     @JsonProperty("timesync_server")
     private String timesyncServer;
 
+    @Setter
     @JsonProperty("feeder_timeout_seconds")
     private Integer feederTimeoutSeconds;
 
+    @Setter
     @JsonProperty("keep_emails_days")
     private Integer keepEmailsDays;
 
+    @Setter
     @JsonProperty("keep_ticks_days")
     private Integer keepTicksDays;
 
+    @Setter
     @JsonProperty("statement_weekend")
     private Boolean statementWeekend;
 
+    @Setter
     @JsonProperty("end_of_day_hour")
     private Integer endOfDayHour;
 
+    @Setter
     @JsonProperty("end_of_day_minute")
     private Integer endOfDayMinute;
 
+    @Setter
     @JsonProperty("optimization_time_minutes")
     private String optimizationTimeMinutes;
 
+    @Setter
     @JsonProperty("overmonth_last_month")
     private Month overmonthLastMonth;
 
+    @Setter
     @JsonProperty("antiflood")
     private Boolean antiflood;
 
+    @Setter
     @JsonProperty("antiflood_max_connections")
     private Integer antifloodMaxConnections;
 
+    @Setter
     @JsonProperty("bind_adresses")
     private List<String> bindAdresses;
 
+    @Setter
     @JsonProperty("web_adresses")
     private List<String> webAdresses;
 
+    @Setter
     @JsonProperty("statement_mode")
     private StatementMode statementMode;
 
+    @Setter
     @JsonProperty("liveupdate_mode")
     private LiveUpdateMode liveupdateMode;
 
+    @Setter
     @JsonProperty("last_activate_time")
     private Integer lastActivateTime;
 
+    @Setter
     @JsonProperty("stop_last_time")
     private Integer stopLastTime;
 
+    @Setter
     @JsonProperty("monthly_state_mode")
     private MonthlyStateMode monthlyStateMode;
 
+    @Setter
     @JsonProperty("rollovers_mode")
     private RolloverChargingMode rolloversMode;
 
+    @Setter
     @JsonProperty("path_database")
     private String pathDatabase;
 
+    @Setter
     @JsonProperty("path_history")
     private String pathHistory;
 
+    @Setter
     @JsonProperty("path_log")
     private String pathLog;
 
+    @Setter
     @JsonProperty("overnight_last_day")
     private Integer overnightLastDay;
 
+    @Setter
     @JsonProperty("overnight_last_time")
     private Integer overnightLastTime;
 
+    @Setter
     @JsonProperty("overnight_prev_time")
     private Integer overnightPrevTime;
 
+    @Setter
     @JsonProperty("stop_delay_seconds")
     private Integer stopDelaySeconds;
 
+    @Setter
     @JsonProperty("stop_reason")
     private StopReason stopReason;
 
+    @Setter
     @JsonProperty("account_url")
     private URI accountUrl;
 
