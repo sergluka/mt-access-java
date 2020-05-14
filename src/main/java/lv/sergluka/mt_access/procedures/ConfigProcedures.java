@@ -1,12 +1,11 @@
 package lv.sergluka.mt_access.procedures;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import lombok.val;
 import lv.sergluka.mt_access.RpcClient;
 import lv.sergluka.mt_access.dto.mt4.Mt4ConCommon;
 import lv.sergluka.mt_access.dto.mt4.Mt4ConGroup;
 import lv.sergluka.mt_access.dto.mt4.Mt4ConManager;
-import lombok.val;
-import lv.sergluka.mt_access.dto.mt4.Mt4TradeRecord;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
