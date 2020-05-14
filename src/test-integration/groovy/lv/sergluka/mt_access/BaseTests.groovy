@@ -179,6 +179,15 @@ class BaseTests extends BaseSpecification {
         !group1.enable
     }
 
+    def "Get all groups"() {
+
+        when:
+        def groups = client.config().groups().getAll().collectList().block(Duration.ofSeconds(10))
+
+        then:
+        groups.size() > 0
+    }
+
     def "Subscribe to groups"() {
 
         given:
@@ -264,11 +273,9 @@ class BaseTests extends BaseSpecification {
         def user1 = Mt4UserRecord.builder()
                 .login(100)
                 .group("demoforex")
-                .enableChangePassword(true)
-                .readOnly(false)
-                .enableOtp(false)
                 .name("Johans Smits")
                 .password("Pass1")
+                .readOnly(false)
                 .build()
 
         def user2 = Mt4UserRecord.builder()

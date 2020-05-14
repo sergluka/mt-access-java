@@ -88,6 +88,7 @@ public class Mt4UserRecord {
     @JsonProperty("api_data")
     private byte[] apiData;
 
+    @Getter(AccessLevel.NONE)
     @Setter
     @JsonProperty("password")
     private String password;
@@ -97,46 +98,57 @@ public class Mt4UserRecord {
     private String passwordInvestor;
 
     @Getter
+    @Setter(AccessLevel.NONE)
     @JsonProperty("last_date")
     private LocalDateTime lastDate;
 
     @Getter
+    @Setter(AccessLevel.NONE)
     @JsonProperty("reg_date")
     private LocalDateTime registrationDate;
 
     @Getter
+    @Setter(AccessLevel.NONE)
     @JsonProperty("timestamp")
     private LocalDateTime timestamp;
 
     @Getter
+    @Setter(AccessLevel.NONE)
     @JsonProperty("last_ip")
     private String lastIp;
 
     @Getter
+    @Setter(AccessLevel.NONE)
     @JsonProperty("prev_month_balance")
     private BigDecimal prevMonthBalance;
 
     @Getter
+    @Setter(AccessLevel.NONE)
     @JsonProperty("prev_day_balance")
     private BigDecimal prevDayBalance;
 
     @Getter
+    @Setter(AccessLevel.NONE)
     @JsonProperty("prev_month_equity")
     private BigDecimal prevMonthEquity;
 
     @Getter
+    @Setter(AccessLevel.NONE)
     @JsonProperty("prev_day_equity")
     private BigDecimal prevDayEquity;
 
     @Getter
+    @Setter(AccessLevel.NONE)
     @JsonProperty("interestrate")
     private BigDecimal interestrate;
 
     @Getter
+    @Setter(AccessLevel.NONE)
     @JsonProperty("balance")
     private BigDecimal balance;
 
     @Getter
+    @Setter(AccessLevel.NONE)
     @JsonProperty("credit")
     private BigDecimal credit;
 
