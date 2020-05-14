@@ -8,10 +8,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Data
 @NoArgsConstructor
@@ -51,38 +48,6 @@ public class Mt4ConCommon {
         SHUTDOWN,
         LIVEUPDATE
     }
-
-    @Getter
-    @JsonProperty("adapters")
-    private String adapters;
-
-    @Getter
-    @JsonProperty("optimization_last_time")
-    private LocalDateTime optimizationLastTime;
-
-    @Getter
-    @JsonProperty("server_version")
-    private Integer serverVersion;
-
-    @Getter
-    @JsonProperty("server_build")
-    private Integer serverBuild;
-
-    @Getter
-    @JsonProperty("last_order")
-    private Integer lastOrder;
-
-    @Getter
-    @JsonProperty("last_login")
-    private Integer lastLogin;
-
-    @Getter
-    @JsonProperty("lost_commission_login")
-    private Integer lostCommissionLogin;
-
-    @Getter
-    @JsonProperty("owner")
-    private String owner;
 
     @JsonProperty("name")
     private String name;
@@ -191,6 +156,38 @@ public class Mt4ConCommon {
 
     @JsonProperty("account_url")
     private URI accountUrl;
+
+    @Setter(AccessLevel.NONE)
+    @JsonProperty("adapters")
+    private String adapters;
+
+    @Setter(AccessLevel.NONE)
+    @JsonProperty("optimization_last_time")
+    private LocalDateTime optimizationLastTime;
+
+    @Setter(AccessLevel.NONE)
+    @JsonProperty("server_version")
+    private Integer serverVersion;
+
+    @Setter(AccessLevel.NONE)
+    @JsonProperty("server_build")
+    private Integer serverBuild;
+
+    @Setter(AccessLevel.NONE)
+    @JsonProperty("last_order")
+    private Integer lastOrder;
+
+    @Setter(AccessLevel.NONE)
+    @JsonProperty("last_login")
+    private Integer lastLogin;
+
+    @Setter(AccessLevel.NONE)
+    @JsonProperty("lost_commission_login")
+    private Integer lostCommissionLogin;
+
+    @Setter(AccessLevel.NONE)
+    @JsonProperty("owner")
+    private String owner;
 
     @Builder(toBuilder = true)
     public Mt4ConCommon(String owner, String name, String address, Integer port, Integer timeout, TypeOfDemo typeOfDemo,

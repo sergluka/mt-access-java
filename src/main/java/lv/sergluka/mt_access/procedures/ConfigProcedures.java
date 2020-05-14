@@ -1,14 +1,17 @@
 package lv.sergluka.mt_access.procedures;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import lv.sergluka.mt_access.RpcClient;
 import lv.sergluka.mt_access.dto.mt4.Mt4ConCommon;
 import lv.sergluka.mt_access.dto.mt4.Mt4ConGroup;
 import lv.sergluka.mt_access.dto.mt4.Mt4ConManager;
 import lombok.val;
+import lv.sergluka.mt_access.dto.mt4.Mt4TradeRecord;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.HashMap;
+import java.util.List;
 
 public class ConfigProcedures {
 
@@ -65,6 +68,11 @@ public class ConfigProcedures {
             val params = new HashMap<String, Object>();
             params.put("group", group);
             return client.call("config.group.get", params, Mt4ConGroup.class);
+        }
+
+        public Flux<Mt4ConGroup> getAll() {
+            return client.call("config.groups.get.all", new TypeReference<List<Mt4ConGroup>>() {})
+                         .flatMapMany(Flux::fromIterable);
         }
 
         public Mono<Void> set(Mt4ConGroup group) {
